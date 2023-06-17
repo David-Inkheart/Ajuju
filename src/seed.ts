@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import prisma from './utils/db.server';
 
-const prisma = new PrismaClient()
 
 async function main() {
   // prisma client queries
