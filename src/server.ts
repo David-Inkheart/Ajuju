@@ -3,6 +3,7 @@ import cors from 'cors';
 
 
 import router from './routes/index';
+import { errorHandler, jwtErrorHandler } from './middleWares/error-handlers';
 
 const app = express();
 
@@ -10,13 +11,14 @@ const Port = process.env.PORT || 3000;
 
 // middlewares
 app.use(cors())
-app.use(express.json())
+app.use(express.json());
+app.use(errorHandler);
+app.use(jwtErrorHandler);
+
 
 
 // ... REST API routes will go here
 app.use('/', router);
-// app.use('/allQuestions', router);
-// app.use('/questions', router);
 
 // Not found route
 app.use((req: Request, res: Response) => {
@@ -31,10 +33,9 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err);
   res.status(500).json({
     success: false,
-    message: 'Internal server error',
+    message: "There was a problem processing your request, please try again later"
   });
 });
-
 
 app.listen(Port, () => {
   console.log(`REST API server is running on http://localhost:${Port}`)

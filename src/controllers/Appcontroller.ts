@@ -5,10 +5,10 @@ class AppController {
     try {
       res.status(200).json({
         success: true,
-        message: 'Ajuju: Your instant answer hub!',
+        message: 'Ajuju: ask, know more, share!',
         data: {
           name: 'Ajuju',
-          purpose: 'Your instant answer hub!',
+          purpose: 'Ask, know more, share!',
           API: 'REST',
           version: '1.0.0',
           API_docs: 'https://documenter.getpostman.com/view/randomnumber/randomnumber/ajuju-rest-api/'

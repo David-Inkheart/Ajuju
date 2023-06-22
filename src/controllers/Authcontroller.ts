@@ -1,6 +1,5 @@
 import { Request, Response } from 'express'
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt'
 
 import prisma from '../utils/db.server'
 import { hashPassword, comparePasswords } from '../utils/passwordService';
