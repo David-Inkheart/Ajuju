@@ -3,7 +3,7 @@ import cors from 'cors';
 
 
 import router from './routes/index';
-import { errorHandler, jwtErrorHandler } from './middleWares/error-handlers';
+// import { errorHandler, jwtErrorHandler } from './middleWares/error-handlers';
 
 const app = express();
 
@@ -12,8 +12,8 @@ const Port = process.env.PORT || 3000;
 // middlewares
 app.use(cors())
 app.use(express.json());
-app.use(errorHandler);
-app.use(jwtErrorHandler);
+// app.use(errorHandler);
+// app.use(jwtErrorHandler);
 
 
 

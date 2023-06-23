@@ -19,6 +19,8 @@ router.post('/auth/register', AuthController.register);
 router.post('/auth/login', AuthController.login);
 // POST: User change password
 router.post('/auth/change-password', authMiddleware, PasswordController.changePassword);
+// POST: Password reset request
+router.post('/auth/reset-password', authMiddleware, PasswordController.resetPassword);
 // POST: create a new question
 router.post('/questions', QuestionController.createQuestion)
 

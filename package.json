@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --exec ts-node src/server.ts"
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "start": "tsc && node src/redisClient.ts"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +31,7 @@
     "dotenv": "^16.3.0",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
-    "jsonwebtoken": "^9.0.0"
+    "jsonwebtoken": "^9.0.0",
+    "redis": "^4.6.7"
   }
 }

@@ -51,17 +51,15 @@ class InternalServerError extends CustomError {
 }
 
 // jwt error handler
-const jwtErrorHandler = (err: any) => {
-  const message = err.message;
-  const statusCode = 401;
-  const data = {};
-  return {
-    message,
-    statusCode,
-    data,
-  };
+const jwtErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication failed: Invalid token',
+    });
+  }
+  next(err);
 };
-
 
 // how to use the error handler
 // import { errorHandler } from './utils/error-handlers';

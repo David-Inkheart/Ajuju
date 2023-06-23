@@ -7,6 +7,19 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
     let token: string | undefined;
 
+    // if (req.cookies && req.cookies.token) {
+    //   token = req.cookies.token;
+    // }
+
+    // check if token starts with Bearer
+    if (req.headers.authorization && !req.headers.authorization.startsWith('Bearer')) {
+      return res.status(401).json({
+        success: false,
+        error: "Authentication failed: token must start with 'Bearer'",
+      });
+    }
+
+    // Get token from header
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
@@ -15,7 +28,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication failed: Token not provided',
+        error: 'Authentication failed: Token not provided',
       });
     }
 
@@ -28,9 +41,10 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     next();
   } catch (err: any) {
     if (err.name === 'JsonWebTokenError') {
-      return jwtErrorHandler(err);
+      return jwtErrorHandler(err, req, res, next);
     }
     next(err);
   }
 };
+
 export default authMiddleware;
