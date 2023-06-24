@@ -142,7 +142,6 @@ class PasswordController {
           })
         }
       }
-
       // send the code to the user's email
       const recipient = email;
       const subject = "Password Reset";
@@ -162,6 +161,129 @@ class PasswordController {
       return res.status(200).json({
         success: true,
         message: "A 5-digit code has been sent to your email address to complete the password reset process"
+      })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({
+        success: false,
+        error: "Could not reset password"
+      })
+    }
+  }
+
+  static async confirmResetPassword(req: Request, res: Response) {
+    try {
+      const { email, code, newPassword } = req.body
+
+      // check if email is valid
+      if (!email || email.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          error: "Please provide your email address"
+        })
+      }
+      
+      // validate email format
+      if (!email.includes('@') || !email.includes('.') || email.length < 5) {
+        return res.status(400).json({
+          success: false,
+          error: "invalid email format"
+        })
+      }
+
+      // check if code is valid
+      if (!code || code.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          error: "Please provide the code sent to your email address"
+        })
+      }
+
+      // check if new password is valid
+      if (!newPassword || newPassword.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          error: "Please provide your new password"
+        })
+      }
+
+      // validate password length
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          success: false,
+          error: "New password must be at least 8 characters long"
+        })
+      }
+
+      // validate code length
+      if (code.length !== 5) {
+        return res.status(400).json({
+          success: false,
+          error: "The code must be 5 digits long"
+        })
+      }
+
+      // check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: {
+          email
+        }
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({
+          success: false,
+          error: "User does not exist"
+        })
+      }
+
+      // check if the newPassword is the same as the current password
+      const isPasswordValid = await comparePasswords(newPassword, existingUser.password);
+
+      if (isPasswordValid) {
+        return res.status(400).json({
+          success: false,
+          error: "New password cannot be the same as the current password"
+        })  
+      }
+
+      // check if the code is valid
+      const key = `password-reset-token-${existingUser.id}`;
+      const cachedCode = await redisClient.get(key);
+
+      if (!cachedCode) {
+        return res.status(400).json({
+          success: false,
+          error: "The code has expired"
+        })
+      }
+
+      if (cachedCode !== code) {
+        return res.status(400).json({
+          success: false,
+          error: "The code is invalid"
+        })
+      }
+
+      // hash the password
+      const hashedPassword = await hashPassword(newPassword);
+
+      // update the user's password
+      await prisma.user.update({
+        where: {
+          id: existingUser.id
+        },
+        data: {
+          password: hashedPassword
+        }
+      })
+
+      // delete the code from the Redis store
+      await redisClient.del(key);
+
+      return res.status(200).json({
+        success: true,
+        message: "Password reset successful"
       })
     } catch (error) {
       console.log(error)

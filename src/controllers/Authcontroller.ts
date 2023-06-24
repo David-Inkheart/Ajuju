@@ -68,7 +68,9 @@ class AuthController {
       });
 
       // generate jwt Token
-      const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!);
+      const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
+        expiresIn: '1h',
+      });
 
       res.status(201).json({
         success: true,
@@ -128,9 +130,10 @@ class AuthController {
           message: 'Invalid email or password',
         });
       }
-
-      // Generate JWT token
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!);
+      // Generate JWT token that expires in 1 hour
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+        expiresIn: '1h',
+      });
 
       res.status(200).json({
         success: true,
