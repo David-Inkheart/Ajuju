@@ -7,33 +7,18 @@ class QuestionController {
     try {
     const questions = await prisma.question.findMany({
       orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        answer: {
-          select: {
-            author: true,
-            content: true,
-            createdAt: true,
-          },
-        },
-        author: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-        _count: {
-          select: {
-            answer: true,
-          },
-        },
+        createdAt: 'asc',
       },
     });
       res.status(200).json({
         success: true,
         message: 'Successfully retrieved list of all questions',
-        data: questions,
+        data: questions.map((question) => ({
+          id: question.id,
+          title: question.title,
+          content: question.content,
+          authorId: question.authorId,
+        })),
       });
     } catch (error: any) {
       res.status(500).json({
@@ -47,26 +32,27 @@ class QuestionController {
   // GET: list of all questions posted by a user
   static async listUserQuestions(req: Request, res: Response) {
     try {
-      const authorId = Number(req.query.authorId || req.body.authorId);
+      const authorId = Number(req.userId);
       const questions = await prisma.question.findMany({
         where: {
           authorId
         },
         orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          _count: {
-            select: {
-              answer: true,
-            },
-          },
-        },
+          id: 'asc',
+        }
       });
       res.status(200).json({
         success: true,
         message: 'Successfully retrieved questions',
-        data: questions,
+        // return specific fields from the question object
+        data: {
+          questions:
+            questions.map((question) => ({
+              id: question.id,
+              title: question.title,
+              content: question.content,
+            })),
+        },
       });
     } catch (error: any) {
       res.status(500).json({
@@ -80,7 +66,26 @@ class QuestionController {
   // POST: create a new question
   static async createQuestion(req: Request, res: Response) {
     try {
-      const { title, content, authorId } = req.body;
+      const { title, content } = req.body;
+      if (!title || !content) {
+        return res.status(400).json({
+          success: false,
+          error: 'Please provide title and content',
+        });
+      }
+      if (title.length < 10) {
+        return res.status(400).json({
+          success: false,
+          error: 'Title must be at least 10 characters long',
+        });
+      }
+      if (content.length < 20) {
+        return res.status(400).json({
+          success: false,
+          error: 'Content must be at least 20 characters long',
+        });
+      }
+      const authorId = Number(req.userId);
       const question = await prisma.question.create({
         data: {
           title,
@@ -99,14 +104,12 @@ class QuestionController {
         message: 'Successfully created a new question',
         data: {
           question,
-          // allUserQuestions,
         },
       });
     } catch (error: any) {
       res.status(500).json({
         success: false,
         message: 'There was an error creating the question',
-        data: error.message,
       });
     }
   }
@@ -145,26 +148,42 @@ class QuestionController {
   // DELETE: delete a question
   static async deleteQuestion(req: Request, res: Response) {
     try {
-      const { id } = req.body;
-      const question = await prisma.question.delete({
+      const { id } = req.params;
+      const authorId = Number(req.userId);
+      const question = await prisma.question.findUnique({
         where: {
-          id,
-        },
-        select: {
-          id: true,
-          title: true,
-          content: true,
+          id: Number(id),
         },
       });
+
+      if (!question) {
+        return res.status(404).json({
+          success: false,
+          error: 'Question not found',
+        });
+      }
+
+      if (question.authorId !== authorId) {
+        return res.status(403).json({
+          success: false,
+          error: 'You are not authorized to delete this question',
+        });
+      }
+      // console.log(question.authorId, authorId);
+      await prisma.question.delete({
+        where: {
+          id: Number(id),
+        },
+      });
+
       res.status(200).json({
         success: true,
         message: 'Successfully deleted question',
-        data: question,
       });
     } catch (error: any) {
       res.status(500).json({
         success: false,
-        message: 'There was an error deleting the question',
+        eror: 'There was an error deleting the question',
         data: error.message,
       });
     }

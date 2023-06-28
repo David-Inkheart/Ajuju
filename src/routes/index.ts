@@ -6,6 +6,7 @@ import QuestionController from '../controllers/Questioncontroller'
 import AuthController from '../controllers/Authcontroller'
 import PasswordController from '../controllers/Passwordcontroller'
 import UserController from '../controllers/Usercontroller'
+import AnswerController from '../controllers/Answercontroller'
 import authMiddleware from '../middleWares/authMiddleware'
 
 //instatiate router
@@ -17,7 +18,9 @@ router.get('/', AppController.getHome)
 router.get('/search/accounts', authMiddleware, UserController.searchAccount)
 // GET: list of all questions
 router.get('/allQuestions', QuestionController.listQuestions)
-router.get('/questions', QuestionController.listUserQuestions)
+router.get('/questions', authMiddleware, QuestionController.listUserQuestions)
+// GET: list of all answers to a question
+router.get('/questions/:id/answers', authMiddleware, AnswerController.listQuestionAnswers)
 
 
 // POST: User registration
@@ -39,13 +42,17 @@ router.post('/accounts/following', authMiddleware, UserController.getFollowing);
 // POST: get all users following a user
 router.post('/accounts/followers', authMiddleware, UserController.getFollowers);
 // POST: create a new question
-router.post('/questions', QuestionController.createQuestion)
+router.post('/questions', authMiddleware, QuestionController.createQuestion)
+// POST: create a new answer to a question
+router.post('/questions/:id/answers', authMiddleware, AnswerController.createAnswer)
 
 // PUT: update a question
-router.put('/questions/:id', QuestionController.updateQuestion)
+// router.put('/questions/:id', authMiddleware, QuestionController.updateQuestion)
 
 // DELETE: delete a question
-router.delete('/questions/:id', QuestionController.deleteQuestion)
+router.delete('/questions/:id', authMiddleware, QuestionController.deleteQuestion)
+// DELETE: delete an answer
+router.delete('/questions/:id/answers/:answerId', authMiddleware, AnswerController.deleteAnswer)
 
 
 
