@@ -19,6 +19,7 @@ router.get('/search/accounts', authMiddleware, UserController.searchAccount)
 router.get('/allQuestions', QuestionController.listQuestions)
 router.get('/questions', QuestionController.listUserQuestions)
 
+
 // POST: User registration
 router.post('/auth/register', AuthController.register);
 // POST: User login
@@ -33,6 +34,10 @@ router.post('/auth/reset-password/confirm', authMiddleware, PasswordController.c
 router.post('/accounts/follow/:id', authMiddleware, UserController.followUser);
 // POST: unfollow a user
 router.post('/accounts/unfollow/:id', authMiddleware, UserController.unfollowUser);
+// POST: get all users a user is following
+router.post('/accounts/following', authMiddleware, UserController.getFollowing);
+// POST: get all users following a user
+router.post('/accounts/followers', authMiddleware, UserController.getFollowers);
 // POST: create a new question
 router.post('/questions', QuestionController.createQuestion)
 

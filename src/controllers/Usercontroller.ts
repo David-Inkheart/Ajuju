@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 
 import prisma from '../utils/db.server'
+import { get } from 'http'
 
 
 class UserController {
@@ -184,6 +185,120 @@ class UserController {
       return res.status(200).json({
         success: true,
         message: "You have unfollowed this user"
+      })
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      })
+    }
+  }
+
+  // GET: get all users a user is following
+  static async getFollowing(req: Request, res: Response) {
+    try {
+      const userId = req.userId
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          error: "your id is not provided"
+        })
+      }
+      const user = await prisma.user.findUnique({
+        where: {
+          id: userId
+        },
+        include: {
+          following: true
+        }
+      })
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        })
+      }
+      if (user.following.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: "You are not following any user"
+        })
+      }
+      // console.log(user.following)
+      const getFollowedUserId = user.following.map((followedUser) => followedUser.followerId)
+      // console.log(getFollowedUserId)
+      const followedUsers = await prisma.user.findMany({
+        where: {
+          id: {
+            in: getFollowedUserId
+          }
+        },
+        select: {
+          id: true,
+          username: true,
+        }
+      })
+      return res.status(200).json({
+        success: true,
+        message: "Successfully retrieved followed accounts",
+        data: followedUsers
+      })
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      })
+    }
+  }
+
+  // GET: get all users following a user
+  static async getFollowers(req: Request, res: Response) {
+    try {
+      const userId = req.userId
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          error: "your id is not provided"
+        })
+      }
+      const user = await prisma.user.findUnique({
+        where: {
+          id: userId
+        },
+        include: {
+          follower: true
+        }
+      })
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        })
+      }
+      if (user.follower.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: "You have no followers"
+        })
+      }
+      // console.log(user.following)
+      const getFollowersId = user.follower.map((follower) => follower.followingId)
+      // console.log(getFollowedUserId)
+      const followers = await prisma.user.findMany({
+        where: {
+          id: {
+            in: getFollowersId
+          }
+        },
+        select: {
+          id: true,
+          username: true,
+        }
+      })
+      return res.status(200).json({
+        success: true,
+        message: "Successfully retrieved following accounts",
+        data: followers
       })
     } catch (error) {
       return res.status(500).json({
