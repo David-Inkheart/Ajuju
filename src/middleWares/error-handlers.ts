@@ -58,6 +58,12 @@ const jwtErrorHandler = (err: any, req: Request, res: Response, next: NextFuncti
       error: 'Authentication failed: Invalid token',
     });
   }
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication failed: Token expired',
+    });
+  }
   next(err);
 };
 

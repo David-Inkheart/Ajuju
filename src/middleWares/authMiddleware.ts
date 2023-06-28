@@ -7,10 +7,6 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
     let token: string | undefined;
 
-    // if (req.cookies && req.cookies.token) {
-    //   token = req.cookies.token;
-    // }
-
     // check if token starts with Bearer
     if (req.headers.authorization && !req.headers.authorization.startsWith('Bearer')) {
       return res.status(401).json({
