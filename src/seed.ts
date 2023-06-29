@@ -1,6 +1,5 @@
 import prisma from './utils/db.server';
 
-
 async function main() {
   // prisma client queries
   // const user = await prisma.user.create({
@@ -46,22 +45,22 @@ async function main() {
   //     },
   //   },
   // })
-  const user = await prisma.user.findUnique({
-    where: { id: 2 },
-    include: {
-      profile: true,
-      question: true,
-    },
-  })
-  console.dir(user, { depth: null })
+  // const user = await prisma.user.findUnique({
+  //   where: { id: 2 },
+  //   include: {
+  //     profile: true,
+  //     question: true,
+  //   },
+  // });
+  // console.dir(user, { depth: null });
 }
 
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
-  .catch(async (e) => { 
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+  .catch(async () => {
+    // console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

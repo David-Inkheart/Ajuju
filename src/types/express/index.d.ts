@@ -1,6 +1,6 @@
-import { UserId } from "../custom";
+import { UserId } from '../custom';
 
-export { }
+export {};
 
 declare global {
   namespace Express {

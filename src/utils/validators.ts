@@ -12,8 +12,11 @@ const loginSchema = joi.object({
 });
 
 const answerSchema = joi.object({
+  id: joi.number().integer().required(),
   content: joi.string().min(10).required(),
 });
+
+const idSchema = joi.number().integer().min(1).required();
 
 const questionSchema = joi.object({
   title: joi.string().min(10).required(),
@@ -22,7 +25,7 @@ const questionSchema = joi.object({
 
 const changePasswordSchema = joi.object({
   currentPassword: joi.string().min(8).required(),
-  newPassword: joi.string().min(8).required().disallow(joi.ref('currentPassword'))
+  newPassword: joi.string().min(8).required().disallow(joi.ref('currentPassword')),
 });
 
 const forgotPasswordSchema = joi.object({
@@ -44,5 +47,14 @@ const followSchema = joi.object({
 });
 
 export {
-  loginSchema, registerSchema, answerSchema, questionSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema,
-  searchSchema, followSchema};
+  loginSchema,
+  registerSchema,
+  answerSchema,
+  questionSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  searchSchema,
+  followSchema,
+  idSchema,
+};

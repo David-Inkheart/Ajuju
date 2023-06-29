@@ -1,22 +1,22 @@
-import prisma from '../utils/db.server'
-import { Request, Response } from 'express'
-import { answerSchema } from '../utils/validators';
+import { Request, Response } from 'express';
+import prisma from '../utils/db.server';
+import { answerSchema, idSchema } from '../utils/validators';
 
 class AnswerController {
   // GET: list of all answers to a question
   static async listQuestionAnswers(req: Request, res: Response) {
     try {
       const questionId = Number(req.params.id);
-      const answers = await prisma.answer.findMany({
-        where: {
-          questionId
-        },
-        orderBy: {
-          id: 'asc',
-        }
-      });
 
-      // get the question
+      const { error } = idSchema.validate(questionId);
+
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          error: error.message,
+        });
+      }
+
       const question = await prisma.question.findUnique({
         where: {
           id: questionId,
@@ -29,7 +29,16 @@ class AnswerController {
         });
       }
 
-      res.status(200).json({
+      const answers = await prisma.answer.findMany({
+        where: {
+          questionId,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
+
+      return res.status(200).json({
         success: true,
         message: 'Successfully retrieved answers',
         // return specific fields from the answer object
@@ -39,15 +48,14 @@ class AnswerController {
             title: question.title,
             content: question.content,
           },
-          answers:
-            answers.map((answer) => ({
-              id: answer.id,
-              content: answer.content,
-            })),
+          answers: answers.map((answer) => ({
+            id: answer.id,
+            content: answer.content,
+          })),
         },
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'There was an error fetching the data',
         data: error.message,
@@ -61,22 +69,21 @@ class AnswerController {
       const authorId = Number(req.userId);
       const answers = await prisma.answer.findMany({
         where: {
-          authorId
+          authorId,
         },
         orderBy: {
           id: 'asc',
-        }
+        },
       });
       res.status(200).json({
         success: true,
         message: 'Successfully retrieved answers',
         // return specific fields from the answer object
         data: {
-          answers:
-            answers.map((answer) => ({
-              id: answer.id,
-              content: answer.content,
-            })),
+          answers: answers.map((answer) => ({
+            id: answer.id,
+            content: answer.content,
+          })),
         },
       });
     } catch (error: any) {
@@ -87,6 +94,7 @@ class AnswerController {
       });
     }
   }
+
   // POST: create a new answer to a question
   static async createAnswer(req: Request, res: Response) {
     try {
@@ -99,8 +107,8 @@ class AnswerController {
       if (error) {
         return res.status(400).json({
           success: false,
-          error: error.message
-        })
+          error: error.message,
+        });
       }
 
       const questionId = Number(req.params.id);
@@ -131,7 +139,7 @@ class AnswerController {
           questionId,
         },
       });
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'Successfully answered the question',
         data: {
@@ -146,7 +154,7 @@ class AnswerController {
         },
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'There was an error answering the question',
         data: error.message,
@@ -166,8 +174,8 @@ class AnswerController {
       if (error) {
         return res.status(400).json({
           success: false,
-          error: error.message
-        })
+          error: error.message,
+        });
       }
 
       const answerId = Number(req.params.id);
@@ -202,13 +210,13 @@ class AnswerController {
         },
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Successfully updated answer',
         data: answer,
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'There was an error updating the answer',
         data: error.message,
@@ -276,12 +284,12 @@ class AnswerController {
           id: answerId,
         },
       });
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Successfully deleted answer',
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'There was an error deleting the answer',
       });

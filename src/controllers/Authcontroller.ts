@@ -1,14 +1,14 @@
-import { Request, Response } from 'express'
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-import prisma from '../utils/db.server'
+import prisma from '../utils/db.server';
 import { hashPassword, comparePasswords } from '../utils/passwordService';
 import { registerSchema, loginSchema } from '../utils/validators';
 
 class AuthController {
   static async register(req: Request, res: Response) {
     try {
-      const { username, email, password } = req.body
+      const { username, email, password } = req.body;
 
       // validate user input
       const { error } = registerSchema.validate(req.body);
@@ -16,22 +16,22 @@ class AuthController {
       if (error) {
         return res.status(400).json({
           success: false,
-          error: error.message
-        })
+          error: error.message,
+        });
       }
 
       // check if user is already existing
       const existingUser = await prisma.user.findFirst({
         where: {
-          OR: [{ username }, { email }]
-        }
+          OR: [{ username }, { email }],
+        },
       });
 
       if (existingUser) {
         return res.status(409).json({
           success: false,
-          message: "User with same email or username already exists"
-        })
+          message: 'User with same email or username already exists',
+        });
       }
 
       // hash the password
@@ -43,7 +43,7 @@ class AuthController {
           username,
           email,
           password: hashedPassword,
-        }
+        },
       });
 
       // generate jwt Token
@@ -51,20 +51,19 @@ class AuthController {
         expiresIn: '1h',
       });
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'User registered successfully',
         token,
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'An error occurred while registering the user',
         error: error.message,
       });
     }
   }
-
 
   static async login(req: Request, res: Response) {
     try {
@@ -76,8 +75,8 @@ class AuthController {
       if (error) {
         return res.status(400).json({
           success: false,
-          error: error.message
-        })
+          error: error.message,
+        });
       }
 
       // Find the user by email
@@ -108,13 +107,13 @@ class AuthController {
         expiresIn: '1h',
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'User logged in successfully',
         token,
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'An error occurred while logging in',
         error: error.message,

@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 
 let prisma: PrismaClient;
 
-declare global { 
+declare global {
   var __prisma: PrismaClient | undefined;
 }
 

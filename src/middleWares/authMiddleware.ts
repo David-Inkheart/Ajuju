@@ -1,10 +1,9 @@
-import jwt, { JsonWebTokenError, JwtPayload } from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { jwtErrorHandler } from './error-handlers';
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
-
     let token: string | undefined;
 
     // check if token starts with Bearer
@@ -17,7 +16,8 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
 
     // Get token from header
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+      // use array destructuring to get the token
+      [, token] = req.headers.authorization.split(' ');
     }
 
     // Check if token exists
@@ -34,12 +34,12 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     // Attach the user ID to the request for further use
     req.userId = decodedToken.userId;
 
-    next();
+    return next();
   } catch (err: any) {
     if (err.name === 'JsonWebTokenError') {
       return jwtErrorHandler(err, req, res, next);
     }
-    next(err);
+    return next(err);
   }
 };
 

@@ -1,15 +1,15 @@
-import prisma from '../utils/db.server'
-import { Request, Response } from 'express'
+import { Request, Response } from 'express';
+import prisma from '../utils/db.server';
 import { questionSchema } from '../utils/validators';
 
 class QuestionController {
   static async listQuestions(req: Request, res: Response) {
     try {
-    const questions = await prisma.question.findMany({
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+      const questions = await prisma.question.findMany({
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
       res.status(200).json({
         success: true,
         message: 'Successfully retrieved list of all questions',
@@ -34,23 +34,22 @@ class QuestionController {
       const authorId = Number(req.userId);
       const questions = await prisma.question.findMany({
         where: {
-          authorId
+          authorId,
         },
         orderBy: {
           id: 'asc',
-        }
+        },
       });
       res.status(200).json({
         success: true,
         message: 'Successfully retrieved questions',
         // return specific fields from the question object
         data: {
-          questions:
-            questions.map((question) => ({
-              id: question.id,
-              title: question.title,
-              content: question.content,
-            })),
+          questions: questions.map((question) => ({
+            id: question.id,
+            title: question.title,
+            content: question.content,
+          })),
         },
       });
     } catch (error: any) {
@@ -62,7 +61,6 @@ class QuestionController {
     }
   }
 
-  
   static async createQuestion(req: Request, res: Response) {
     try {
       const { title, content } = req.body;
@@ -89,8 +87,8 @@ class QuestionController {
           content: true,
         },
       });
- 
-      res.status(201).json({
+
+      return res.status(201).json({
         success: true,
         message: 'Successfully created a new question',
         data: {
@@ -98,14 +96,14 @@ class QuestionController {
         },
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'There was an error creating the question',
       });
     }
   }
-  
-  static async updateQuestion(req: Request, res: Response) { 
+
+  static async updateQuestion(req: Request, res: Response) {
     try {
       const { title, content } = req.body;
       // validate the request body
@@ -117,7 +115,7 @@ class QuestionController {
           error: error.message,
         });
       }
-      
+
       const { id } = req.params;
       const authorId = Number(req.userId);
 
@@ -156,7 +154,7 @@ class QuestionController {
         },
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Successfully updated question',
         data: {
@@ -164,14 +162,14 @@ class QuestionController {
         },
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'There was an error updating the question',
         data: error.message,
       });
     }
   }
-  
+
   static async deleteQuestion(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -202,12 +200,12 @@ class QuestionController {
         },
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Successfully deleted question',
       });
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         eror: 'There was an error deleting the question',
         data: error.message,
@@ -215,6 +213,5 @@ class QuestionController {
     }
   }
 }
-
 
 export default QuestionController;

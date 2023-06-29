@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 async function mockPasswordResetEmail(recipient: string, subject: string, message: string) {
   console.log('Mock email sent:');
   console.log('Recipient:', recipient);
