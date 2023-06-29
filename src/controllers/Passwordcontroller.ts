@@ -5,6 +5,7 @@ import redisClient from '../redisClient';
 import { hashPassword, comparePasswords } from '../utils/passwordService';
 import { UserId } from "../types/custom"
 import mockPasswordResetEmail from '../utils/emailService';
+import { changePasswordSchema, forgotPasswordSchema, resetPasswordSchema } from '../utils/validators';
 
 
 class PasswordController {
@@ -13,54 +14,24 @@ class PasswordController {
       const { currentPassword, newPassword } = req.body
       const userId = req.userId as UserId
 
-      // password validation
-      if (!currentPassword || currentPassword.trim() === '') {
+      // validate the request body
+      const { error } = changePasswordSchema.validate(req.body);
+
+      if (error) {
         return res.status(400).json({
           success: false,
-          error: "invalid current password"
+          error: error.message
         })
       }
 
-      // password validation
-      if (!newPassword || newPassword.trim() === '') {
-        return res.status(400).json({
-          success: false,
-          error: "invalid new password"
-        })
-      }
-
-      // check if current password is the same as the new password
-      if (currentPassword === newPassword) {
-        return res.status(400).json({
-          success: false,
-          error: "New password cannot be the same as the current password"
-        })
-      }
-
-      // validate password length
-      if (newPassword.length < 8) {
-        return res.status(400).json({
-          success: false,
-          error: "New password must be at least 8 characters long"
-        })
-      }
-
-      // check if user is already existing
       const existingUser = await prisma.user.findFirst({
         where: {
           id: userId
         }
       });
 
-      if (!existingUser) {
-        return res.status(404).json({
-          success: false,
-          error: "User does not exist"
-        })
-      }
-
       // compare old password with the one in the database
-      const isPasswordValid = await comparePasswords(currentPassword, existingUser.password);
+      const isPasswordValid = await comparePasswords(currentPassword, existingUser!.password);
 
       if (!isPasswordValid) {
         return res.status(401).json({
@@ -100,19 +71,13 @@ class PasswordController {
     try {
       const { email } = req.body
 
-      // check if email is valid
-      if (!email || email.trim() === '') {
+      // validate the user input
+      const { error } = forgotPasswordSchema.validate(req.body);
+
+      if (error) {
         return res.status(400).json({
           success: false,
-          error: "Please provide your email address"
-        })
-      }
-      
-      // validate email format
-      if (!email.includes('@') || !email.includes('.') || email.length < 5) {
-        return res.status(400).json({
-          success: false,
-          error: "invalid email format"
+          error: error.message
         })
       }
 
@@ -141,21 +106,21 @@ class PasswordController {
             error: "Could not cache the password reset token"
           })
         }
-      }
-      // send the code to the user's email
-      const recipient = email;
-      const subject = "Password Reset";
-      const message = `Your password reset code is: ${passwordResetToken}`;
+        // send the code to the user's email
+        const recipient = email;
+        const subject = "Password Reset";
+        const message = `Your password reset code is: ${passwordResetToken}`;
 
-      try {
-        await mockPasswordResetEmail(recipient, subject, message);
-      }
-      catch (error) {
-        console.log(error)
-        return res.status(500).json({
-          success: false,
-          error: "Could not send the password reset code to your email address"
-        })
+        try {
+          await mockPasswordResetEmail(recipient, subject, message);
+        }
+        catch (error) {
+          console.log(error)
+          return res.status(500).json({
+            success: false,
+            error: "Could not send the password reset code to your email address"
+          })
+        }
       }
 
       return res.status(200).json({
@@ -175,51 +140,13 @@ class PasswordController {
     try {
       const { email, code, newPassword } = req.body
 
-      // check if email is valid
-      if (!email || email.trim() === '') {
-        return res.status(400).json({
-          success: false,
-          error: "Please provide your email address"
-        })
-      }
-      
-      // validate email format
-      if (!email.includes('@') || !email.includes('.') || email.length < 5) {
-        return res.status(400).json({
-          success: false,
-          error: "invalid email format"
-        })
-      }
+      // validate the user input
+      const { error } = resetPasswordSchema.validate(req.body);
 
-      // check if code is valid
-      if (!code || code.trim() === '') {
+      if (error) {
         return res.status(400).json({
           success: false,
-          error: "Please provide the code sent to your email address"
-        })
-      }
-
-      // check if new password is valid
-      if (!newPassword || newPassword.trim() === '') {
-        return res.status(400).json({
-          success: false,
-          error: "Please provide your new password"
-        })
-      }
-
-      // validate password length
-      if (newPassword.length < 8) {
-        return res.status(400).json({
-          success: false,
-          error: "New password must be at least 8 characters long"
-        })
-      }
-
-      // validate code length
-      if (code.length !== 5) {
-        return res.status(400).json({
-          success: false,
-          error: "The code must be 5 digits long"
+          error: error.message
         })
       }
 

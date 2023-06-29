@@ -1,21 +1,22 @@
 import { Request, Response } from 'express'
-
 import prisma from '../utils/db.server'
-import { get } from 'http'
-
+import { searchSchema, followSchema } from '../utils/validators'
 
 class UserController {
   // GET: get profile of a user who owns the provided email
   static async searchAccount(req: Request, res: Response) {
     try {
       const { email } = req.query
-      // come email validation
-      if (!email) {
+
+      // validate the email
+      const { error } = searchSchema.validate({ email })
+      if (error) {
         return res.status(400).json({
           success: false,
-          error: "please provide a valid email"
+          error: error.message
         })
       }
+
       const user = await prisma.user.findUnique({
         where: {
           email: email as string
@@ -49,21 +50,16 @@ class UserController {
   static async followUser(req: Request, res: Response) {
     try {
       const { id } = req.params
-      if (!id) {
+      // validate the id
+      const { error } = followSchema.validate({ id })
+      if (error) {
         return res.status(400).json({
           success: false,
-          error: "please provide user id to follow"
+          error: error.message
         })
       }
 
-      const userId = req.userId // id of the user following pulled from the auth middleware
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          error: "your id is not provided"
-        })
-      }
-
+      const userId = req.userId
       // check if the user is trying to follow himself
       if (userId === Number(id)) {
         return res.status(400).json({
@@ -118,7 +114,7 @@ class UserController {
     } catch (error) {
       return res.status(500).json({
         success: false,
-        error: "Internal server error"
+        error: "something went wrong, please try again later"
       })
     }
   }
@@ -126,20 +122,17 @@ class UserController {
   static async unfollowUser(req: Request, res: Response) {
     try {
       const { id } = req.params
-      if (!id) {
+
+      // validate the id
+      const { error } = followSchema.validate({ id })
+      if (error) {
         return res.status(400).json({
           success: false,
-          error: "please provide user id to unfollow"
+          error: error.message
         })
       }
 
-      const userId = req.userId // id of the user following pulled from the auth middleware
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          error: "your id is not provided"
-        })
-      }
+      const userId = req.userId!
 
       // check if the user is trying to unfollow himself
       if (userId === Number(id)) {
@@ -197,13 +190,8 @@ class UserController {
   // GET: get all users a user is following
   static async getFollowing(req: Request, res: Response) {
     try {
-      const userId = req.userId
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          error: "your id is not provided"
-        })
-      }
+      const userId = req.userId! 
+
       const user = await prisma.user.findUnique({
         where: {
           id: userId
@@ -246,7 +234,7 @@ class UserController {
     } catch (error) {
       return res.status(500).json({
         success: false,
-        error: "Internal server error"
+        error: "something went wrong, please try again later"
       })
     }
   }
@@ -254,13 +242,8 @@ class UserController {
   // GET: get all users following a user
   static async getFollowers(req: Request, res: Response) {
     try {
-      const userId = req.userId
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          error: "your id is not provided"
-        })
-      }
+      const userId = req.userId!
+
       const user = await prisma.user.findUnique({
         where: {
           id: userId
@@ -303,7 +286,7 @@ class UserController {
     } catch (error) {
       return res.status(500).json({
         success: false,
-        error: "Internal server error"
+        error: "something went wrong, please try again later"
       })
     }
   }

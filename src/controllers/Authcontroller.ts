@@ -3,41 +3,20 @@ import jwt from 'jsonwebtoken';
 
 import prisma from '../utils/db.server'
 import { hashPassword, comparePasswords } from '../utils/passwordService';
+import { registerSchema, loginSchema } from '../utils/validators';
 
 class AuthController {
   static async register(req: Request, res: Response) {
     try {
       const { username, email, password } = req.body
 
-      // email validation
-      if (!email || email.trim() === '') {
-        return res.status(400).json({
-          success: false,
-          message: "Email cannot be empty"
-        })
-      }
+      // validate user input
+      const { error } = registerSchema.validate(req.body);
 
-      // password validation
-      if (!password || password.trim() === '') {
+      if (error) {
         return res.status(400).json({
           success: false,
-          message: "Password cannot be empty"
-        })
-      }
-
-      // username validation
-      if (!username || username.trim() === '') {
-        return res.status(400).json({
-          success: false,
-          message: "Username cannot be empty"
-        })
-      }
-
-      // validate password length
-      if (password.length < 8) {
-        return res.status(400).json({
-          success: false,
-          message: "Password must be at least 8 characters long"
+          error: error.message
         })
       }
 
@@ -91,20 +70,14 @@ class AuthController {
     try {
       const { email, password } = req.body;
 
-      // email validation
-      if (!email || email.trim() === '') {
-        return res.status(400).json({
-          success: false,
-          message: 'Email is required',
-        });
-      }
+      // validate user input
+      const { error } = loginSchema.validate(req.body);
 
-      // password validation
-      if (!password || password.trim() === '') {
+      if (error) {
         return res.status(400).json({
           success: false,
-          message: 'Password is required',
-        });
+          error: error.message
+        })
       }
 
       // Find the user by email
@@ -117,7 +90,7 @@ class AuthController {
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid email or password',
+          message: 'Invalid email',
         });
       }
 
@@ -127,7 +100,7 @@ class AuthController {
       if (!isMatch) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid email or password',
+          message: 'Invalid password',
         });
       }
       // Generate JWT token that expires in 1 hour

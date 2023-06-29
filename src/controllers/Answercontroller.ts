@@ -1,5 +1,6 @@
 import prisma from '../utils/db.server'
 import { Request, Response } from 'express'
+import { answerSchema } from '../utils/validators';
 
 class AnswerController {
   // GET: list of all answers to a question
@@ -91,11 +92,15 @@ class AnswerController {
     try {
       const authorId = Number(req.userId);
       const { content } = req.body;
-      if (!content || content.trim() === '') {
+
+      // validate user input
+      const { error } = answerSchema.validate(req.body);
+
+      if (error) {
         return res.status(400).json({
           success: false,
-          error: 'Please provide an answer',
-        });
+          error: error.message
+        })
       }
 
       const questionId = Number(req.params.id);
@@ -154,8 +159,41 @@ class AnswerController {
     try {
       const authorId = Number(req.userId);
       const { content } = req.body;
+
+      // validate user input
+      const { error } = answerSchema.validate(req.body);
+
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          error: error.message
+        })
+      }
+
       const answerId = Number(req.params.id);
-      const answer = await prisma.answer.update({
+
+      // check if the the user is the author
+      const answer = await prisma.answer.findUnique({
+        where: {
+          id: answerId,
+        },
+      });
+      if (!answer) {
+        return res.status(404).json({
+          success: false,
+          error: 'Answer not found',
+        });
+      }
+
+      if (answer.authorId !== authorId) {
+        return res.status(403).json({
+          success: false,
+          error: 'You are not authorized to update this answer',
+        });
+      }
+
+      // update the answer
+      await prisma.answer.update({
         where: {
           id: answerId,
         },
@@ -163,6 +201,7 @@ class AnswerController {
           content,
         },
       });
+
       res.status(200).json({
         success: true,
         message: 'Successfully updated answer',
@@ -245,7 +284,6 @@ class AnswerController {
       res.status(500).json({
         success: false,
         message: 'There was an error deleting the answer',
-        data: error.message,
       });
     }
   }

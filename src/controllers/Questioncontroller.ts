@@ -1,8 +1,8 @@
 import prisma from '../utils/db.server'
 import { Request, Response } from 'express'
+import { questionSchema } from '../utils/validators';
 
 class QuestionController {
-  // GET: list of all questions
   static async listQuestions(req: Request, res: Response) {
     try {
     const questions = await prisma.question.findMany({
@@ -29,7 +29,6 @@ class QuestionController {
     }
   }
 
-  // GET: list of all questions posted by a user
   static async listUserQuestions(req: Request, res: Response) {
     try {
       const authorId = Number(req.userId);
@@ -63,28 +62,20 @@ class QuestionController {
     }
   }
 
-  // POST: create a new question
+  
   static async createQuestion(req: Request, res: Response) {
     try {
       const { title, content } = req.body;
-      if (!title || !content) {
+
+      // validate the request body
+      const { error } = questionSchema.validate(req.body);
+      if (error) {
         return res.status(400).json({
           success: false,
-          error: 'Please provide title and content',
+          error: error.message,
         });
       }
-      if (title.length < 10) {
-        return res.status(400).json({
-          success: false,
-          error: 'Title must be at least 10 characters long',
-        });
-      }
-      if (content.length < 20) {
-        return res.status(400).json({
-          success: false,
-          error: 'Content must be at least 20 characters long',
-        });
-      }
+
       const authorId = Number(req.userId);
       const question = await prisma.question.create({
         data: {
@@ -98,7 +89,7 @@ class QuestionController {
           content: true,
         },
       });
-      // const allUserQuestions = await this.listUserQuestions(req, res);
+ 
       res.status(201).json({
         success: true,
         message: 'Successfully created a new question',
@@ -113,13 +104,46 @@ class QuestionController {
       });
     }
   }
-  // POST: update a question
+  
   static async updateQuestion(req: Request, res: Response) { 
     try {
-      const { id, title, content } = req.body;
-      const question = await prisma.question.update({
+      const { title, content } = req.body;
+      // validate the request body
+      const { error } = questionSchema.validate(req.body);
+
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          error: error.message,
+        });
+      }
+      
+      const { id } = req.params;
+      const authorId = Number(req.userId);
+
+      const question = await prisma.question.findUnique({
         where: {
-          id,
+          id: Number(id),
+        },
+      });
+
+      if (!question) {
+        return res.status(404).json({
+          success: false,
+          error: 'Question not found',
+        });
+      }
+
+      if (question.authorId !== authorId) {
+        return res.status(403).json({
+          success: false,
+          error: 'You are not authorized to update this question',
+        });
+      }
+
+      const updatedQuestion = await prisma.question.update({
+        where: {
+          id: Number(id),
         },
         data: {
           title,
@@ -131,10 +155,13 @@ class QuestionController {
           content: true,
         },
       });
+
       res.status(200).json({
         success: true,
         message: 'Successfully updated question',
-        data: question,
+        data: {
+          question: updatedQuestion,
+        },
       });
     } catch (error: any) {
       res.status(500).json({
@@ -144,8 +171,7 @@ class QuestionController {
       });
     }
   }
-
-  // DELETE: delete a question
+  
   static async deleteQuestion(req: Request, res: Response) {
     try {
       const { id } = req.params;
