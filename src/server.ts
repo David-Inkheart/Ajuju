@@ -26,8 +26,6 @@ app.use((req: Request, res: Response) => {
 
 // Error Handling to catch any unhandled error during req processing
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  // eslint-disable-next-line no-console
-  console.error(err);
   if (err.name === 'JsonWebTokenError') {
     return jwtErrorHandler(err, req, res, next);
   }

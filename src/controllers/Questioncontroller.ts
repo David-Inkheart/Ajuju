@@ -9,16 +9,23 @@ class QuestionController {
         orderBy: {
           createdAt: 'asc',
         },
+        include: {
+          questionVote: true,
+        },
       });
+      // console.dir(questions, { depth: null });
       res.status(200).json({
         success: true,
         message: 'Successfully retrieved list of all questions',
-        data: questions.map((question) => ({
-          id: question.id,
-          title: question.title,
-          content: question.content,
-          authorId: question.authorId,
-        })),
+        data: {
+          questions: questions.map((question) => ({
+            id: question.id,
+            title: question.title,
+            content: question.content,
+            authorId: question.authorId,
+            votes: question.voteCount,
+          })),
+        },
       });
     } catch (error: any) {
       res.status(500).json({

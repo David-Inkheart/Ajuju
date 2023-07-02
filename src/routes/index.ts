@@ -7,6 +7,7 @@ import AuthController from '../controllers/Authcontroller';
 import PasswordController from '../controllers/Passwordcontroller';
 import UserController from '../controllers/Usercontroller';
 import AnswerController from '../controllers/Answercontroller';
+import VoteController from '../controllers/Votecontoller';
 import authMiddleware from '../middleWares/authMiddleware';
 
 // instatiate router
@@ -47,6 +48,8 @@ router.post('/accounts/followers', UserController.getFollowers);
 router.post('/questions', QuestionController.createQuestion);
 // POST: create a new answer to a question
 router.post('/questions/:id/answers', AnswerController.createAnswer);
+// POST: upvote or downvote a question
+router.post('/questions/:id/vote', VoteController.voteQuestion);
 
 // PUT: update a question
 router.put('/questions/:id', QuestionController.updateQuestion);

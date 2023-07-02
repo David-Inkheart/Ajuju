@@ -43,7 +43,16 @@ const searchSchema = joi.object({
 });
 
 const followSchema = joi.object({
-  id: joi.number().required(),
+  id: joi.number().integer().required(),
+});
+
+const voteAnswerSchema = joi.object({
+  answerId: joi.number().integer().required(),
+});
+
+const voteQuestionSchema = joi.object({
+  id: joi.number().integer().required(),
+  voteType: joi.string().valid('UPVOTE', 'DOWNVOTE').required(),
 });
 
 export {
@@ -57,4 +66,6 @@ export {
   searchSchema,
   followSchema,
   idSchema,
+  voteAnswerSchema,
+  voteQuestionSchema,
 };
