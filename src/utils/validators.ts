@@ -47,7 +47,9 @@ const followSchema = joi.object({
 });
 
 const voteAnswerSchema = joi.object({
+  id: joi.number().integer().required(),
   answerId: joi.number().integer().required(),
+  voteType: joi.string().valid('UPVOTE', 'DOWNVOTE').required(),
 });
 
 const voteQuestionSchema = joi.object({

@@ -50,7 +50,8 @@ router.post('/questions', QuestionController.createQuestion);
 router.post('/questions/:id/answers', AnswerController.createAnswer);
 // POST: upvote or downvote a question
 router.post('/questions/:id/vote', VoteController.voteQuestion);
-
+// POST: upvote or downvote an answer
+router.post('/questions/:id/answers/:answerId/vote', VoteController.voteAnswer);
 // PUT: update a question
 router.put('/questions/:id', QuestionController.updateQuestion);
 

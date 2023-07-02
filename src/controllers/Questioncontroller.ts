@@ -6,9 +6,14 @@ class QuestionController {
   static async listQuestions(req: Request, res: Response) {
     try {
       const questions = await prisma.question.findMany({
-        orderBy: {
-          createdAt: 'asc',
-        },
+        orderBy: [
+          {
+            voteCount: 'desc',
+          },
+          {
+            createdAt: 'desc',
+          },
+        ],
         include: {
           questionVote: true,
         },
@@ -43,9 +48,14 @@ class QuestionController {
         where: {
           authorId,
         },
-        orderBy: {
-          id: 'asc',
-        },
+        orderBy: [
+          {
+            voteCount: 'desc',
+          },
+          {
+            createdAt: 'desc',
+          },
+        ],
       });
       res.status(200).json({
         success: true,
@@ -56,6 +66,7 @@ class QuestionController {
             id: question.id,
             title: question.title,
             content: question.content,
+            votes: question.voteCount,
           })),
         },
       });

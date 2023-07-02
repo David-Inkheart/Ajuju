@@ -33,9 +33,14 @@ class AnswerController {
         where: {
           questionId,
         },
-        orderBy: {
-          createdAt: 'asc',
-        },
+        orderBy: [
+          {
+            voteCount: 'desc',
+          },
+          {
+            createdAt: 'desc',
+          },
+        ],
       });
 
       return res.status(200).json({
@@ -51,6 +56,7 @@ class AnswerController {
           answers: answers.map((answer) => ({
             id: answer.id,
             content: answer.content,
+            voteCount: answer.voteCount,
           })),
         },
       });
