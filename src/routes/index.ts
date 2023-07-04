@@ -31,6 +31,8 @@ router.use(authMiddleware);
 router.post('/auth/change-password', PasswordController.changePassword);
 // GET: get profile of a user who owns the provided email
 router.get('/search/accounts', UserController.searchAccount);
+// PUT: update user profile bio
+router.put('/accounts/profile', UserController.updateProfile);
 // GET: list of all questions
 router.get('/allQuestions', QuestionController.listQuestions);
 router.get('/questions', QuestionController.listUserQuestions);

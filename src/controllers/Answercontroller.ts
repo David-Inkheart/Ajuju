@@ -118,10 +118,14 @@ class AnswerController {
       }
 
       const questionId = Number(req.params.id);
-      if (!questionId) {
+
+      // validate question id
+      const { error: idError } = idSchema.validate(questionId);
+
+      if (idError) {
         return res.status(400).json({
           success: false,
-          error: 'Please provide a question id',
+          error: idError.message,
         });
       }
 
@@ -236,8 +240,25 @@ class AnswerController {
       const userId = Number(req.userId);
       const questionId = Number(req.params.id);
       const answerId = Number(req.params.answerId);
-      // console.log(userId, questionId, answerId);
-      // check if the question exists
+      // validate question id
+      const { error } = idSchema.validate(questionId);
+
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          error: error.message,
+        });
+      }
+      // validate answer id
+      const { error: answerError } = idSchema.validate(answerId);
+
+      if (answerError) {
+        return res.status(400).json({
+          success: false,
+          error: answerError.message,
+        });
+      }
+
       const question = await prisma.question.findUnique({
         where: {
           id: questionId,

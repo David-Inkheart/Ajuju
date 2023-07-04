@@ -12,7 +12,7 @@ const loginSchema = joi.object({
 });
 
 const answerSchema = joi.object({
-  id: joi.number().integer().required(),
+  // id: joi.number().integer().required(),
   content: joi.string().min(10).required(),
 });
 
@@ -57,6 +57,10 @@ const voteQuestionSchema = joi.object({
   voteType: joi.string().valid('UPVOTE', 'DOWNVOTE').required(),
 });
 
+const bioSchema = joi.object({
+  bio: joi.string().min(10).max(100).required(),
+});
+
 export {
   loginSchema,
   registerSchema,
@@ -70,4 +74,5 @@ export {
   idSchema,
   voteAnswerSchema,
   voteQuestionSchema,
+  bioSchema,
 };

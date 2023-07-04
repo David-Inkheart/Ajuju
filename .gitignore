@@ -3,3 +3,5 @@ node_modules
 prisma
 package-lock.json
 dist
+coverage
+jest.config.js

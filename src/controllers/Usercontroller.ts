@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/db.server';
-import { searchSchema, followSchema } from '../utils/validators';
+import { searchSchema, followSchema, bioSchema } from '../utils/validators';
 
 class UserController {
-  // GET: get profile of a user who owns the provided email
+  // get profile of a user who owns the provided email
   static async searchAccount(req: Request, res: Response) {
     try {
       const { email } = req.query;
@@ -46,7 +46,7 @@ class UserController {
     }
   }
 
-  // POST: follow a user
+  // follow a user
   static async followUser(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -187,7 +187,7 @@ class UserController {
     }
   }
 
-  // GET: get all users a user is following
+  // get all users a user is following
   static async getFollowing(req: Request, res: Response) {
     try {
       const userId = req.userId!;
@@ -241,7 +241,7 @@ class UserController {
     }
   }
 
-  // GET: get all users following a user
+  // get all users following a user
   static async getFollowers(req: Request, res: Response) {
     try {
       const userId = req.userId!;
@@ -291,6 +291,80 @@ class UserController {
       return res.status(500).json({
         success: false,
         error: 'something went wrong, please try again later',
+      });
+    }
+  }
+
+  // update user profile
+  static async updateProfile(req: Request, res: Response) {
+    try {
+      const userId = req.userId!;
+      const { bio } = req.body;
+
+      const { error } = bioSchema.validate({ bio });
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      // check if the user has a profile
+      const profile = await prisma.profile.findUnique({
+        where: {
+          userId,
+        },
+      });
+      // if the user does not have a profile, create one
+      if (!profile) {
+        await prisma.profile.create({
+          data: {
+            bio,
+            user: {
+              connect: {
+                id: userId,
+              },
+            },
+          },
+        });
+        return res.status(200).json({
+          success: true,
+          message: 'Successfully updated profile',
+          data: {
+            bio,
+          },
+        });
+      }
+      // update the profile
+      const updatedProfile = await prisma.profile.update({
+        where: {
+          userId,
+        },
+        data: {
+          bio,
+        },
+      });
+
+      // get the user
+      const user = await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Successfully updated profile',
+        data: {
+          userId: updatedProfile.userId,
+          username: user!.username,
+          bio: updatedProfile.bio,
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        error: 'something went wrong, could not update your profile',
       });
     }
   }

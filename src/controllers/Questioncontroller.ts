@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/db.server';
-import { questionSchema } from '../utils/validators';
+import { questionSchema, idSchema } from '../utils/validators';
 
 class QuestionController {
   static async listQuestions(req: Request, res: Response) {
@@ -35,7 +35,7 @@ class QuestionController {
     } catch (error: any) {
       res.status(500).json({
         success: false,
-        message: 'There was an error fetching the data',
+        error: 'There was an error fetching the data',
         data: error.message,
       });
     }
@@ -73,7 +73,7 @@ class QuestionController {
     } catch (error: any) {
       res.status(500).json({
         success: false,
-        message: 'There was an error fetching the data',
+        error: 'There was an error fetching the data',
         data: error.message,
       });
     }
@@ -116,7 +116,7 @@ class QuestionController {
     } catch (error: any) {
       return res.status(500).json({
         success: false,
-        message: 'There was an error creating the question',
+        error: 'There was an error creating the question',
       });
     }
   }
@@ -135,6 +135,14 @@ class QuestionController {
       }
 
       const { id } = req.params;
+
+      const { error: idError } = idSchema.validate(id);
+      if (idError) {
+        return res.status(400).json({
+          success: false,
+          error: idError.message,
+        });
+      }
       const authorId = Number(req.userId);
 
       const question = await prisma.question.findUnique({
@@ -192,6 +200,15 @@ class QuestionController {
     try {
       const { id } = req.params;
       const authorId = Number(req.userId);
+
+      const { error: idError } = idSchema.validate(id);
+      if (idError) {
+        return res.status(400).json({
+          success: false,
+          error: idError.message,
+        });
+      }
+
       const question = await prisma.question.findUnique({
         where: {
           id: Number(id),
