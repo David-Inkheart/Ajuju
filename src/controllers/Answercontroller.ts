@@ -3,7 +3,7 @@ import prisma from '../utils/db.server';
 import { answerSchema, idSchema } from '../utils/validators';
 
 class AnswerController {
-  // GET: list of all answers to a question
+  // list of all answers to a question
   static async listQuestionAnswers(req: Request, res: Response) {
     try {
       const questionId = Number(req.params.id);
@@ -69,7 +69,7 @@ class AnswerController {
     }
   }
 
-  // GET: list of all answers posted by a user
+  // list of all answers posted by a user
   static async listUserAnswers(req: Request, res: Response) {
     try {
       const authorId = Number(req.userId);
@@ -95,13 +95,12 @@ class AnswerController {
     } catch (error: any) {
       res.status(500).json({
         success: false,
-        message: 'There was an error fetching the data',
-        data: error.message,
+        error: 'There was an error fetching the data',
       });
     }
   }
 
-  // POST: create a new answer to a question
+  // create a new answer to a question
   static async createAnswer(req: Request, res: Response) {
     try {
       const authorId = Number(req.userId);
@@ -166,13 +165,12 @@ class AnswerController {
     } catch (error: any) {
       return res.status(500).json({
         success: false,
-        message: 'There was an error answering the question',
-        data: error.message,
+        error: 'There was an error answering the question',
       });
     }
   }
 
-  // PUT: update an answer
+  // update an answer
   static async updateAnswer(req: Request, res: Response) {
     try {
       const authorId = Number(req.userId);
@@ -185,6 +183,18 @@ class AnswerController {
         return res.status(400).json({
           success: false,
           error: error.message,
+        });
+      }
+
+      const questionId = Number(req.params.id);
+
+      // validate question id
+      const { error: idError } = idSchema.validate(questionId);
+
+      if (idError) {
+        return res.status(400).json({
+          success: false,
+          error: idError.message,
         });
       }
 
@@ -234,7 +244,7 @@ class AnswerController {
     }
   }
 
-  // DELETE: delete an answer if the user is the author
+  // delete an answer if the user is the author
   static async deleteAnswer(req: Request, res: Response) {
     try {
       const userId = Number(req.userId);
