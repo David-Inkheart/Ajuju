@@ -30,7 +30,7 @@ class AuthController {
       if (existingUser) {
         return res.status(409).json({
           success: false,
-          message: 'User with same email or username already exists',
+          error: 'User with same email or username already exists',
         });
       }
 
@@ -59,7 +59,6 @@ class AuthController {
     } catch (error: any) {
       return res.status(500).json({
         success: false,
-        message: 'An error occurred while registering the user',
         error: error.message,
       });
     }
@@ -89,7 +88,7 @@ class AuthController {
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid email',
+          error: 'Invalid email',
         });
       }
 
@@ -99,7 +98,7 @@ class AuthController {
       if (!isMatch) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid password',
+          error: 'Invalid password',
         });
       }
       // Generate JWT token that expires in 1 hour
@@ -115,7 +114,6 @@ class AuthController {
     } catch (error: any) {
       return res.status(500).json({
         success: false,
-        message: 'An error occurred while logging in',
         error: error.message,
       });
     }
