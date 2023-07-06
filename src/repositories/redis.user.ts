@@ -11,7 +11,3 @@ export const getResetToken = (key: string) => {
 export const deleteResetToken = (key: string) => {
   return redisClient.del(key);
 };
-
-afterAll(async () => {
-  await redisClient.quit();
-});

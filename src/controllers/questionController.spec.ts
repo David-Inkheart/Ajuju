@@ -1,277 +1,326 @@
-import { Request, Response } from 'express';
+import { faker } from '@faker-js/faker';
+import { mocked } from 'jest-mock';
+
 import QuestionController from './Questioncontroller';
+import { listAllQuestions, listAskedQuestions, createAquestion, updateQuestion, findQuestion, deleteAquestion } from '../repositories/db.question';
 
-let mockRequest: jest.Mocked<Request>;
-let mockResponse: jest.Mocked<Response>;
+jest.mock('../repositories/db.question');
 
-beforeEach(() => {
-  // mock the request and response objects
-  mockRequest = {
-    userId: 7,
-    params: {
-      id: '6',
-    },
-    body: {
-      title: 'How to create a new question',
-      content: 'I have been trying to create a new question but I am unable to do so',
-    },
-  } as unknown as jest.Mocked<Request>;
-  mockResponse = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<Response>;
-});
+describe('QuestionController', () => {
+  describe('list All Questions', () => {
+    it('should return a list of all questions', async () => {
+      const questions = [
+        {
+          id: faker.number.int(),
+          title: faker.lorem.sentence(),
+          content: faker.lorem.paragraph(),
+          authorId: faker.number.int(),
+          voteCount: faker.number.int(),
+          createdAt: faker.date.past(),
+          updatedAt: faker.date.past(),
+          answer: [],
+          questionVote: [],
+        },
+        {
+          id: faker.number.int(),
+          title: faker.lorem.sentence(),
+          content: faker.lorem.paragraph(),
+          authorId: faker.number.int(),
+          voteCount: faker.number.int(),
+          createdAt: faker.date.past(),
+          updatedAt: faker.date.past(),
+          answer: [],
+          questionVote: [],
+        },
+      ];
 
-afterEach(() => {
-  jest.clearAllMocks();
-});
+      mocked(listAllQuestions).mockResolvedValueOnce(questions);
 
-describe('get list of all questions', () => {
-  it('returns a status code of 200', async () => {
-    await QuestionController.listQuestions(mockRequest, mockResponse);
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-  });
-
-  it('calls the json method', async () => {
-    await QuestionController.listQuestions(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalled();
-  });
-
-  it('returns a success message with clear data', async () => {
-    await QuestionController.listQuestions(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-        message: expect.any(String),
-        data: expect.any(Object),
-      }),
-    );
-  });
-
-  it('returns clear response when there is an error', async () => {
-    const mockError = new Error('There was an error fetching the data');
-    mockResponse.json = jest.fn().mockImplementationOnce(() => {
-      throw mockError;
+      await expect(QuestionController.listQuestions()).resolves.toEqual({
+        questions: questions.map((question) => ({
+          id: question.id,
+          title: question.title,
+          content: question.content,
+          authorId: question.authorId,
+          votes: question.voteCount,
+        })),
+      });
     });
-    await QuestionController.listQuestions(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.any(String),
-        data: expect.any(String),
-      }),
-    );
-  });
-});
 
-describe('get list of all questions by a user', () => {
-  it('returns a status code of 200', async () => {
-    await QuestionController.listUserQuestions(mockRequest, mockResponse);
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-  });
+    it('should return an error message if there was an error retrieving the questions', async () => {
+      mocked(listAllQuestions).mockRejectedValueOnce(new Error('Error'));
 
-  it('calls the json method', async () => {
-    await QuestionController.listUserQuestions(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalled();
-  });
-
-  it('returns a success message with clear data', async () => {
-    await QuestionController.listUserQuestions(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-        message: expect.any(String),
-        data: expect.any(Object),
-      }),
-    );
-  });
-
-  it('returns clear response when there is an error', async () => {
-    const mockError = new Error('There was an error fetching the data');
-    mockResponse.json = jest.fn().mockImplementationOnce(() => {
-      throw mockError;
+      await expect(QuestionController.listQuestions()).rejects.toThrow('Error');
     });
-    await QuestionController.listUserQuestions(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.any(String),
-        data: expect.any(String),
-      }),
-    );
-  });
-});
-
-describe('create a new question', () => {
-  it.skip('calls the json method, returns 201 and returns a clear success message', async () => {
-    await QuestionController.createQuestion(mockRequest, mockResponse);
-    expect(mockResponse.status).toHaveBeenCalledWith(201);
-    expect(mockResponse.json).toHaveBeenCalled();
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-        message: expect.any(String),
-        data: expect.any(Object),
-      }),
-    );
   });
 
-  it('returns an error message when the request body is invalid', async () => {
-    mockRequest.body = {
-      title: 'How to create a new question',
-    };
-    await QuestionController.createQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.any(String),
-      }),
-    );
-  });
+  describe('list User Questions', () => {
+    it('should return a list of all questions asked by a user', async () => {
+      const authorId = faker.number.int();
 
-  it('returns an error message when the request body is empty', async () => {
-    mockRequest.body = {};
-    await QuestionController.createQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.any(String),
-      }),
-    );
-  });
-});
+      const questions = [
+        {
+          id: faker.number.int(),
+          title: faker.lorem.sentence(),
+          content: faker.lorem.paragraph(),
+          authorId,
+          voteCount: faker.number.int(),
+          createdAt: faker.date.past(),
+          updatedAt: faker.date.past(),
+          answer: [],
+          questionVote: [],
+        },
+        {
+          id: faker.number.int(),
+          title: faker.lorem.sentence(),
+          content: faker.lorem.paragraph(),
+          authorId: faker.number.int(),
+          voteCount: faker.number.int(),
+          createdAt: faker.date.past(),
+          updatedAt: faker.date.past(),
+          answer: [],
+          questionVote: [],
+        },
+      ];
 
-describe('update a question', () => {
-  // mock the userId, request body and request params
-  beforeEach(() => {
-    mockRequest.body = {
-      title: 'How to create a question',
-      content: 'I have been trying to create a new question but I am unable to do so',
-    };
-    mockRequest.params = {
-      id: '39',
-    };
-  });
+      const userQuestions = questions.filter((question) => question.authorId === authorId);
 
-  it('calls the json method, returns 200', async () => {
-    await QuestionController.updateQuestion(mockRequest, mockResponse);
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalled();
-  });
+      mocked(listAskedQuestions).mockResolvedValueOnce(userQuestions);
 
-  it('returns a success message with clear data', async () => {
-    await QuestionController.updateQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-        message: expect.any(String),
-        data: expect.any(Object),
-      }),
-    );
-  });
-
-  it('returns an error message when the request body is invalid', async () => {
-    mockRequest.body = {
-      title: 'How to create a new question',
-    };
-    await QuestionController.updateQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.any(String),
-      }),
-    );
-  });
-
-  it('returns an error message when the request body is empty', async () => {
-    mockRequest.body = {};
-    await QuestionController.updateQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.any(String),
-      }),
-    );
-  });
-
-  it('returns an error message when the question does not exist', async () => {
-    mockRequest.params = {
-      id: '0',
-    };
-    await QuestionController.updateQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.any(String),
-      }),
-    );
-  });
-
-  it('returns an error message when the user is not the author of the question', async () => {
-    mockRequest.userId = 2;
-    await QuestionController.updateQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: 'You are not authorized to update this question',
-      }),
-    );
-  });
-});
-
-describe('delete a question', () => {
-  it('calls the json method, returns 404, and a clear message', async () => {
-    mockRequest.params = {
-      id: '37',
-    };
-    await QuestionController.deleteQuestion(mockRequest, mockResponse);
-    expect(mockResponse.status).toHaveBeenCalledWith(404); // question not found since we have deleted it previously
-    expect(mockResponse.json).toHaveBeenCalled();
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: 'Question not found',
-      }),
-    );
-  });
-
-  it('returns an error message when the question does not exist', async () => {
-    mockRequest.params = {
-      id: '7',
-    };
-    await QuestionController.deleteQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: expect.any(String),
-      }),
-    );
-  });
-
-  it('returns an error message when the user is not the author of the question', async () => {
-    mockRequest.params = {
-      id: '1',
-    };
-    await QuestionController.deleteQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: false,
-        error: 'You are not authorized to delete this question',
-      }),
-    );
-  });
-
-  it('returns an error message when there is an error deleting the question', async () => {
-    const mockError = new Error('There was an error deleting the question');
-    mockResponse.json = jest.fn().mockImplementationOnce(() => {
-      throw mockError;
+      await expect(QuestionController.listUserQuestions(authorId)).resolves.toEqual({
+        questions: userQuestions.map((question) => ({
+          id: question.id,
+          title: question.title,
+          content: question.content,
+          votes: question.voteCount,
+        })),
+      });
     });
-    await QuestionController.deleteQuestion(mockRequest, mockResponse);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
+
+    it('should return an error message if there was an error retrieving the questions', async () => {
+      const authorId = faker.number.int();
+
+      mocked(listAskedQuestions).mockRejectedValueOnce(new Error('Error'));
+
+      await expect(QuestionController.listUserQuestions(authorId)).rejects.toThrow('Error');
+    });
+
+    it('should return an empty array if the user has not asked any questions', async () => {
+      const authorId = faker.number.int();
+
+      mocked(listAskedQuestions).mockResolvedValueOnce([]);
+
+      await expect(QuestionController.listUserQuestions(authorId)).resolves.toEqual({
+        questions: [],
+      });
+    });
+  });
+
+  describe('create Question', () => {
+    it('should fail if validation fails', async () => {
+      const title = faker.lorem.sentence();
+      const content = '';
+      const authorId = faker.number.int();
+
+      await expect(QuestionController.createQuestion(title, content, authorId)).resolves.toMatchObject({
+        success: false,
+      });
+    });
+
+    it('should return a success message if the question was created successfully', async () => {
+      const title = faker.lorem.sentence();
+      const content = faker.lorem.paragraph();
+      const authorId = faker.number.int();
+
+      const question = {
+        id: faker.number.int(),
+        title,
+        content,
+        authorId,
+        voteCount: faker.number.int(),
+        createdAt: faker.date.past(),
+        updatedAt: faker.date.past(),
+        answer: [],
+        questionVote: [],
+      };
+
+      mocked(createAquestion).mockResolvedValueOnce(question);
+
+      await expect(QuestionController.createQuestion(title, content, authorId)).resolves.toEqual({
+        success: true,
+        message: 'Successfully created a new question',
+        data: {
+          question,
+        },
+      });
+    });
+  });
+
+  describe('update Question', () => {
+    it('should fail if validation fails', async () => {
+      const title = faker.lorem.sentence();
+      const content = '';
+      const authorId = faker.number.int();
+      const id = faker.number.int();
+
+      await expect(QuestionController.updateQuestion({ authorId, id, title, content })).resolves.toMatchObject({
+        success: false,
+      });
+    });
+
+    it('should fail is id is not an int', async () => {
+      const title = faker.lorem.sentence();
+      const content = faker.lorem.paragraph();
+      const authorId = faker.number.int();
+      const id = faker.number.float();
+
+      await expect(QuestionController.updateQuestion({ authorId, id, title, content })).resolves.toMatchObject({
         success: false,
         error: expect.any(String),
-      }),
-    );
+      });
+    });
+
+    it('should fail if the question does not exist', async () => {
+      const title = faker.lorem.sentence();
+      const content = faker.lorem.paragraph();
+      const authorId = faker.number.int();
+      const id = faker.number.int();
+
+      mocked(findQuestion).mockResolvedValueOnce(null);
+
+      await expect(QuestionController.updateQuestion({ authorId, id, title, content })).resolves.toMatchObject({
+        success: false,
+        error: expect.any(String),
+      });
+    });
+
+    it('should fail if the user is not the author of the question', async () => {
+      const title = faker.lorem.sentence();
+      const content = faker.lorem.paragraph();
+      const authorId = faker.number.int();
+      const id = faker.number.int();
+
+      const question = {
+        id,
+        title,
+        content,
+        authorId: faker.number.int(),
+        voteCount: faker.number.int(),
+        createdAt: faker.date.past(),
+        updatedAt: faker.date.past(),
+        answer: [],
+        questionVote: [],
+      };
+
+      mocked(findQuestion).mockResolvedValueOnce(question);
+
+      await expect(QuestionController.updateQuestion({ authorId, id, title, content })).resolves.toMatchObject({
+        success: false,
+        error: expect.any(String),
+      });
+    });
+
+    it('should return a success message if the question was updated successfully', async () => {
+      const title = faker.lorem.sentence();
+      const content = faker.lorem.paragraph();
+      const authorId = faker.number.int();
+      const id = faker.number.int();
+
+      const question = {
+        id,
+        title,
+        content,
+        authorId,
+        voteCount: faker.number.int(),
+        createdAt: faker.date.past(),
+        updatedAt: faker.date.past(),
+        answer: [],
+        questionVote: [],
+      };
+
+      mocked(findQuestion).mockResolvedValueOnce(question);
+      mocked(updateQuestion).mockResolvedValueOnce(question);
+
+      await expect(QuestionController.updateQuestion({ authorId, id, title, content })).resolves.toEqual({
+        success: true,
+        message: 'Successfully updated the question',
+        data: {
+          question,
+        },
+      });
+    });
+  });
+
+  describe('delete Question', () => {
+    it('should fail if the id is not an int', async () => {
+      const id = faker.number.float();
+      const authorId = faker.number.int();
+
+      await expect(QuestionController.deleteQuestion({ id, authorId })).resolves.toEqual({
+        success: false,
+        error: expect.any(String),
+      });
+    });
+
+    it('should fail if the question does not exist', async () => {
+      const id = faker.number.int();
+      const authorId = faker.number.int();
+
+      mocked(findQuestion).mockResolvedValueOnce(null);
+
+      await expect(QuestionController.deleteQuestion({ id, authorId })).resolves.toEqual({
+        success: false,
+        error: expect.any(String),
+      });
+    });
+
+    it('should fail if the user is not the author of the question', async () => {
+      const id = faker.number.int();
+      const authorId = faker.number.int();
+
+      const question = {
+        id,
+        title: faker.lorem.sentence(),
+        content: faker.lorem.paragraph(),
+        authorId: faker.number.int(),
+        voteCount: faker.number.int(),
+        createdAt: faker.date.past(),
+        updatedAt: faker.date.past(),
+        answer: [],
+        questionVote: [],
+      };
+
+      mocked(findQuestion).mockResolvedValueOnce(question);
+
+      await expect(QuestionController.deleteQuestion({ id, authorId })).resolves.toEqual({
+        success: false,
+        error: expect.any(String),
+      });
+    });
+
+    it('should return a success message if the question was deleted successfully', async () => {
+      const id = faker.number.int();
+      const authorId = faker.number.int();
+
+      const question = {
+        id,
+        title: faker.lorem.sentence(),
+        content: faker.lorem.paragraph(),
+        authorId,
+        voteCount: faker.number.int(),
+        createdAt: faker.date.past(),
+        updatedAt: faker.date.past(),
+        answer: [],
+        questionVote: [],
+      };
+
+      mocked(findQuestion).mockResolvedValueOnce(question);
+      mocked(deleteAquestion).mockResolvedValueOnce(question);
+
+      await expect(QuestionController.deleteQuestion({ id, authorId })).resolves.toMatchObject({
+        success: true,
+        message: 'Successfully deleted the question',
+      });
+    });
   });
 });

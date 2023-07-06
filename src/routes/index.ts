@@ -2,12 +2,18 @@
 import express from 'express';
 
 import AppController from '../controllers/Appcontroller';
-import QuestionController from '../controllers/Questioncontroller';
 import UserController from '../controllers/Usercontroller';
 import AnswerController from '../controllers/Answercontroller';
 import VoteController from '../controllers/Votecontoller';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
+import {
+  AllQuestionsHandler,
+  AskedQuestionsHandler,
+  createQuestionHandler,
+  deleteQuestionHandler,
+  updateQuestionHandler,
+} from './routeHandlers/question';
 
 // instatiate router
 const router = express.Router();
@@ -33,8 +39,8 @@ router.get('/search/accounts', UserController.searchAccount);
 // PUT: update user profile bio
 router.put('/accounts/profile', UserController.updateProfile);
 // GET: list of all questions
-router.get('/allQuestions', QuestionController.listQuestions);
-router.get('/questions', QuestionController.listUserQuestions);
+router.get('/allQuestions', AllQuestionsHandler);
+router.get('/questions', AskedQuestionsHandler);
 // GET: list of all answers to a question
 router.get('/questions/:id/answers', AnswerController.listQuestionAnswers);
 // POST: follow a user
@@ -46,7 +52,7 @@ router.post('/accounts/following', UserController.getFollowing);
 // POST: get all users following a user
 router.post('/accounts/followers', UserController.getFollowers);
 // POST: create a new question
-router.post('/questions', QuestionController.createQuestion);
+router.post('/questions', createQuestionHandler);
 // POST: create a new answer to a question
 router.post('/questions/:id/answers', AnswerController.createAnswer);
 // POST: upvote or downvote a question
@@ -54,10 +60,10 @@ router.post('/questions/:id/vote', VoteController.voteQuestion);
 // POST: upvote or downvote an answer
 router.post('/questions/:id/answers/:answerId/vote', VoteController.voteAnswer);
 // PUT: update a question
-router.put('/questions/:id', QuestionController.updateQuestion);
+router.put('/questions/:id', updateQuestionHandler);
 
 // DELETE: delete a question
-router.delete('/questions/:id', QuestionController.deleteQuestion);
+router.delete('/questions/:id', deleteQuestionHandler);
 // DELETE: delete an answer
 router.delete('/questions/:id/answers/:answerId', AnswerController.deleteAnswer);
 

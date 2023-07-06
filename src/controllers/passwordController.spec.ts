@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { mocked } from 'jest-mock';
 
+// import redisClient from '../redisClient';
 import PasswordController from './Passwordcontroller';
 import { findUser, updateUser } from '../repositories/db.user';
 import { storeResetToken, getResetToken } from '../repositories/redis.user';
@@ -9,6 +10,10 @@ import { comparePasswords } from '../utils/passwordService';
 jest.mock('../repositories/db.user');
 jest.mock('../repositories/redis.user');
 jest.mock('../utils/passwordService');
+
+// afterAll(async () => {
+//   await redisClient.quit();
+// });
 
 describe('PasswordController', () => {
   describe('changePassword', () => {
