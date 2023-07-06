@@ -1,122 +1,90 @@
-import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-
-import prisma from '../utils/db.server';
 import { hashPassword, comparePasswords } from '../utils/passwordService';
 import { registerSchema, loginSchema } from '../utils/validators';
+import { createUser, findUser } from '../repositories/db.user';
 
 class AuthController {
-  static async register(req: Request, res: Response) {
-    try {
-      const { username, email, password } = req.body;
+  static async register({ username, email, password }: { username: string; email: string; password: string }) {
+    // validate user input
+    const { error } = registerSchema.validate({ username, email, password });
 
-      // validate user input
-      const { error } = registerSchema.validate(req.body);
-
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          error: error.message,
-        });
-      }
-
-      // check if user is already existing
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          OR: [{ username }, { email }],
-        },
-      });
-
-      if (existingUser) {
-        return res.status(409).json({
-          success: false,
-          error: 'User with same email or username already exists',
-        });
-      }
-
-      // hash the password
-      const hashedPassword = await hashPassword(password);
-
-      // save user to db
-      const newUser = await prisma.user.create({
-        data: {
-          username,
-          email,
-          password: hashedPassword,
-        },
-      });
-
-      // generate jwt Token
-      const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
-        expiresIn: '1h',
-      });
-
-      return res.status(201).json({
-        success: true,
-        message: 'User registered successfully',
-        token,
-      });
-    } catch (error: any) {
-      return res.status(500).json({
+    if (error) {
+      return {
         success: false,
         error: error.message,
-      });
+      };
     }
+
+    // check if user is already existing email or username
+    const existingUser = (await findUser({ email })) || (await findUser({ username }));
+
+    if (existingUser) {
+      return {
+        success: false,
+        error: 'User with same email or username already exists',
+      };
+    }
+
+    // hash the password
+    const hashedPassword = await hashPassword(password);
+
+    // save user to db
+    const newUser = await createUser({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    // generate jwt Token
+    const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
+      expiresIn: '1h',
+    });
+
+    return {
+      success: true,
+      message: 'User registered successfully',
+      token,
+    };
   }
 
-  static async login(req: Request, res: Response) {
-    try {
-      const { email, password } = req.body;
+  static async login({ email, password }: { email: string; password: string }) {
+    // validate user input
+    const { error } = loginSchema.validate({ email, password });
 
-      // validate user input
-      const { error } = loginSchema.validate(req.body);
-
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          error: error.message,
-        });
-      }
-
-      // Find the user by email
-      const user = await prisma.user.findFirst({
-        where: {
-          email,
-        },
-      });
-
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid email',
-        });
-      }
-
-      // Compare the password
-      const isMatch = await comparePasswords(password, user.password);
-
-      if (!isMatch) {
-        return res.status(401).json({
-          success: false,
-          error: 'Invalid password',
-        });
-      }
-      // Generate JWT token that expires in 1 hour
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
-        expiresIn: '1h',
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: 'User logged in successfully',
-        token,
-      });
-    } catch (error: any) {
-      return res.status(500).json({
+    if (error) {
+      return {
         success: false,
         error: error.message,
-      });
+      };
     }
+    // Find the user by email
+    const user = await findUser({ email });
+    if (!user) {
+      return {
+        success: false,
+        error: 'Email/password mismatch',
+      };
+    }
+
+    // Compare the password
+    const isMatch = await comparePasswords(password, user.password);
+
+    if (!isMatch) {
+      return {
+        success: false,
+        error: 'Email/password mismatch',
+      };
+    }
+    // Generate JWT token that expires in 1 hour
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: '1h',
+    });
+
+    return {
+      success: true,
+      message: 'User logged in successfully',
+      token,
+    };
   }
 }
 

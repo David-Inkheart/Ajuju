@@ -3,12 +3,11 @@ import express from 'express';
 
 import AppController from '../controllers/Appcontroller';
 import QuestionController from '../controllers/Questioncontroller';
-import AuthController from '../controllers/Authcontroller';
-import PasswordController from '../controllers/Passwordcontroller';
 import UserController from '../controllers/Usercontroller';
 import AnswerController from '../controllers/Answercontroller';
 import VoteController from '../controllers/Votecontoller';
 import authMiddleware from '../middleWares/authMiddleware';
+import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 
 // instatiate router
 const router = express.Router();
@@ -16,19 +15,19 @@ const router = express.Router();
 // get home page
 router.get('/', AppController.getHome);
 // POST: User registration
-router.post('/auth/register', AuthController.register);
+router.post('/auth/register', registerHandler);
 // POST: User login
-router.post('/auth/login', AuthController.login);
+router.post('/auth/login', loginHandler);
 // POST: Password reset request
-router.post('/auth/reset-password', PasswordController.resetPassword);
+router.post('/auth/reset-password', resetPasswordHandler);
 // POST: Password reset confirmation
-router.post('/auth/reset-password/confirm', PasswordController.confirmResetPassword);
+router.post('/auth/reset-password/confirm', confirmResetPasswordHandler);
 
 // use auth middleware to protect the routes below
 router.use(authMiddleware);
 
 // POST: auth user change password
-router.post('/auth/change-password', PasswordController.changePassword);
+router.post('/auth/change-password', changePasswordHandler);
 // GET: get profile of a user who owns the provided email
 router.get('/search/accounts', UserController.searchAccount);
 // PUT: update user profile bio

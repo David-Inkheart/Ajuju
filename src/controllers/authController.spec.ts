@@ -1,109 +1,139 @@
-import { Request, Response } from 'express';
+import { faker } from '@faker-js/faker';
+import { mocked } from 'jest-mock';
+
 import AuthController from './Authcontroller';
+import { createUser, findUser } from '../repositories/db.user';
+import { comparePasswords } from '../utils/passwordService';
 
-let mockRequest: jest.Mocked<Request>;
-let mockResponse: jest.Mocked<Response>;
-
-beforeEach(() => {
-  mockRequest = {
-    body: {
-      username: 'testuser',
-      email: 'test@email.com',
-      password: 'testpassword',
-    },
-  } as unknown as jest.Mocked<Request>;
-
-  mockResponse = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-  } as unknown as jest.Mocked<Response>;
-});
+jest.mock('../repositories/db.user');
+jest.mock('../utils/passwordService');
 
 describe('AuthController', () => {
   describe('register', () => {
-    it('should return 400 if validation fails', async () => {
-      mockRequest.body = {};
-      await AuthController.register(mockRequest, mockResponse);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({
+    it('should fail if validation fails', async () => {
+      await expect(
+        AuthController.register({
+          username: faker.string.alphanumeric(),
+          email: faker.internet.email(),
+          password: faker.internet.password({ length: 3 }),
+        }),
+      ).resolves.toMatchObject({
         success: false,
-        error: '"username" is required',
       });
     });
 
-    it.skip('should return 201 if user is created successfully', async () => {
-      await AuthController.register(mockRequest, mockResponse);
-      expect(mockResponse.status).toHaveBeenCalledWith(201);
-      expect(mockResponse.json).toHaveBeenCalledWith({
+    it('should fail if user already exists', async () => {
+      const username = faker.internet.userName();
+      const email = faker.internet.email();
+      const password = faker.internet.password({ length: 8 });
+
+      mocked(findUser).mockResolvedValueOnce({
+        id: 1,
+        username,
+        email,
+        password,
+        createdAt: faker.date.past(),
+      });
+      await expect(
+        AuthController.register({
+          username,
+          email,
+          password,
+        }),
+      ).resolves.toMatchObject({
+        success: false,
+      });
+    });
+
+    it('should return success if user is created successfully', async () => {
+      // alphanumeric username
+      const username = faker.string.alphanumeric({ length: { min: 3, max: 20 } });
+      const email = faker.internet.email();
+      const password = faker.internet.password({ length: 8 });
+
+      mocked(findUser).mockResolvedValueOnce(null);
+      mocked(createUser).mockResolvedValueOnce({
+        id: 1,
+        username,
+        email,
+        password,
+        createdAt: faker.date.anytime(),
+      });
+      await expect(
+        AuthController.register({
+          username,
+          email,
+          password,
+        }),
+      ).resolves.toMatchObject({
         success: true,
-        message: 'User registered successfully',
-        token: expect.any(String),
-      });
-    });
-
-    it('should return 409 if user already exists', async () => {
-      await AuthController.register(mockRequest, mockResponse);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(409);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'User with same email or username already exists',
       });
     });
   });
 
   describe('login', () => {
-    it('should return 400 if validation fails', async () => {
-      mockRequest.body = {};
-      await AuthController.login(mockRequest, mockResponse);
-
-      expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({
+    it('should fail if password validation fails', async () => {
+      await expect(AuthController.login({ email: faker.internet.email(), password: faker.internet.password({ length: 3 }) })).resolves.toMatchObject({
         success: false,
-        error: '"email" is required',
       });
     });
 
-    it('should return 200 if user is logged in successfully', async () => {
-      mockRequest.body = {
-        email: 'test@email.com',
-        password: 'testpassword',
-      };
-      await AuthController.login(mockRequest, mockResponse);
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.json).toHaveBeenCalledWith({
+    it('should return success if user exists and password is correct', async () => {
+      const email = faker.internet.email();
+      const password = faker.internet.password({ length: 8 });
+
+      mocked(findUser).mockResolvedValueOnce({
+        id: 1,
+        username: faker.internet.userName(),
+        email,
+        password,
+        createdAt: faker.date.past(),
+      });
+      mocked(comparePasswords).mockResolvedValueOnce(true);
+      await expect(
+        AuthController.login({
+          email,
+          password,
+        }),
+      ).resolves.toMatchObject({
         success: true,
-        message: 'User logged in successfully',
-        token: expect.any(String),
       });
     });
 
-    it('should return 401 if user does not exist', async () => {
-      mockRequest.body = {
-        email: 'johndoe@yahoomail.com',
-        password: 'wrongpassword',
-      };
-      await AuthController.login(mockRequest, mockResponse);
+    it('should fail if user does not exist', async () => {
+      const email = faker.internet.email();
+      const password = faker.internet.password({ length: 8 });
 
-      expect(mockResponse.status).toHaveBeenCalledWith(401);
-      expect(mockResponse.json).toHaveBeenCalledWith({
+      mocked(findUser).mockResolvedValueOnce(null);
+      await expect(
+        AuthController.login({
+          email,
+          password,
+        }),
+      ).resolves.toMatchObject({
         success: false,
-        error: 'Invalid email',
       });
     });
 
-    it('should return 401 if password is incorrect', async () => {
-      mockRequest.body = {
-        email: 'test@email.com',
-        password: 'wrongpassword',
-      };
-      await AuthController.login(mockRequest, mockResponse);
+    it('should fail if user exist and password is incorrect', async () => {
+      const email = faker.internet.email();
+      const password = faker.internet.password({ length: 8 });
 
-      expect(mockResponse.status).toHaveBeenCalledWith(401);
-      expect(mockResponse.json).toHaveBeenCalledWith({
+      mocked(findUser).mockResolvedValueOnce({
+        id: 1,
+        username: faker.internet.userName(),
+        email,
+        password,
+        createdAt: faker.date.past(),
+      });
+      mocked(comparePasswords).mockResolvedValueOnce(false);
+      await expect(
+        AuthController.login({
+          email,
+          password,
+        }),
+      ).resolves.toMatchObject({
         success: false,
-        error: 'Invalid password',
       });
     });
   });
