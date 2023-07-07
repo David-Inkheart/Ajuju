@@ -90,6 +90,7 @@ class QuestionController {
       message: 'Successfully updated the question',
       data: {
         question: updatedQuestion,
+        edited: question.updatedAt,
       },
     };
   }

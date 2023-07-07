@@ -11,10 +11,6 @@ jest.mock('../repositories/db.user');
 jest.mock('../repositories/redis.user');
 jest.mock('../utils/passwordService');
 
-// afterAll(async () => {
-//   await redisClient.quit();
-// });
-
 describe('PasswordController', () => {
   describe('changePassword', () => {
     it('should fail if validation fails', async () => {

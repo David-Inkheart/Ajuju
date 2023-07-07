@@ -1,337 +1,223 @@
-import { Request, Response } from 'express';
-import prisma from '../utils/db.server';
 import { answerSchema, idSchema } from '../utils/validators';
+import { findQuestion } from '../repositories/db.question';
+import { answerQuestion, deleteAnanswer, findAnswer, listAnswers, listAnswerstoQuestion, updateAnAnswer } from '../repositories/db.answer';
 
 class AnswerController {
   // list of all answers to a question
-  static async listQuestionAnswers(req: Request, res: Response) {
-    try {
-      const questionId = Number(req.params.id);
+  static async listQuestionAnswers({ questionId }: { questionId: number }) {
+    const { error } = idSchema.validate(questionId);
 
-      const { error } = idSchema.validate(questionId);
-
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          error: error.message,
-        });
-      }
-
-      const question = await prisma.question.findUnique({
-        where: {
-          id: questionId,
-        },
-      });
-      if (!question) {
-        return res.status(404).json({
-          success: false,
-          error: 'Question not found',
-        });
-      }
-
-      const answers = await prisma.answer.findMany({
-        where: {
-          questionId,
-        },
-        orderBy: [
-          {
-            voteCount: 'desc',
-          },
-          {
-            createdAt: 'desc',
-          },
-        ],
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Successfully retrieved answers',
-        // return specific fields from the answer object
-        data: {
-          question: {
-            id: question.id,
-            title: question.title,
-            content: question.content,
-          },
-          answers: answers.map((answer) => ({
-            id: answer.id,
-            content: answer.content,
-            voteCount: answer.voteCount,
-          })),
-        },
-      });
-    } catch (error: any) {
-      return res.status(500).json({
+    if (error) {
+      return {
         success: false,
-        message: 'There was an error fetching the data',
-        data: error.message,
-      });
+        error: error.message,
+      };
     }
+
+    const question = await findQuestion(questionId);
+    if (!question) {
+      return {
+        success: false,
+        error: 'Question not found',
+      };
+    }
+
+    const answers = await listAnswerstoQuestion(questionId);
+
+    return {
+      success: true,
+      message: 'Successfully retrieved answers',
+      // return specific fields from the answer object
+      data: {
+        question: {
+          id: question.id,
+          title: question.title,
+          content: question.content,
+        },
+        answers: answers.map((answer) => ({
+          id: answer.id,
+          content: answer.content,
+          voteCount: answer.voteCount,
+        })),
+      },
+    };
   }
 
   // list of all answers posted by a user
-  static async listUserAnswers(req: Request, res: Response) {
-    try {
-      const authorId = Number(req.userId);
-      const answers = await prisma.answer.findMany({
-        where: {
-          authorId,
-        },
-        orderBy: {
-          id: 'asc',
-        },
-      });
-      res.status(200).json({
-        success: true,
-        message: 'Successfully retrieved answers',
-        // return specific fields from the answer object
-        data: {
-          answers: answers.map((answer) => ({
-            id: answer.id,
-            content: answer.content,
-          })),
-        },
-      });
-    } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        error: 'There was an error fetching the data',
-      });
-    }
+  static async listUserAnswers({ authorId }: { authorId: number }) {
+    const answers = await listAnswers(authorId);
+
+    return {
+      success: true,
+      message: 'Successfully retrieved answers',
+      // return specific fields from the answer object
+      data: {
+        answers: answers.map((answer) => ({
+          id: answer.id,
+          content: answer.content,
+        })),
+      },
+    };
   }
 
   // create a new answer to a question
-  static async createAnswer(req: Request, res: Response) {
-    try {
-      const authorId = Number(req.userId);
-      const { content } = req.body;
-
-      // validate user input
-      const { error } = answerSchema.validate(req.body);
-
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          error: error.message,
-        });
-      }
-
-      const questionId = Number(req.params.id);
-
-      // validate question id
-      const { error: idError } = idSchema.validate(questionId);
-
-      if (idError) {
-        return res.status(400).json({
-          success: false,
-          error: idError.message,
-        });
-      }
-
-      // get the question
-      const question = await prisma.question.findUnique({
-        where: {
-          id: questionId,
-        },
-      });
-      if (!question) {
-        return res.status(404).json({
-          success: false,
-          error: 'Question not found',
-        });
-      }
-
-      const answer = await prisma.answer.create({
-        data: {
-          content,
-          authorId,
-          questionId,
-        },
-      });
-      return res.status(201).json({
-        success: true,
-        message: 'Successfully answered the question',
-        data: {
-          question: {
-            title: question.title,
-            content: question.content,
-          },
-          answer: {
-            id: answer.id,
-            answer: answer.content,
-          },
-        },
-      });
-    } catch (error: any) {
-      return res.status(500).json({
+  static async createAnswer({ authorId, questionId, content }: { authorId: number; questionId: number; content: string }) {
+    // validate user input
+    const { error } = answerSchema.validate({ content });
+    if (error) {
+      return {
         success: false,
-        error: 'There was an error answering the question',
-      });
+        error: error.message,
+      };
     }
+    // validate question id
+    const { error: idError } = idSchema.validate(questionId);
+    if (idError) {
+      return {
+        success: false,
+        error: idError.message,
+      };
+    }
+    // get the question
+    const question = await findQuestion(questionId);
+    if (!question) {
+      return {
+        success: false,
+        error: 'Question not found',
+      };
+    }
+
+    const answer = await answerQuestion(authorId, questionId, content);
+
+    return {
+      success: true,
+      message: 'Successfully answered the question',
+      data: {
+        question: {
+          title: question.title,
+          content: question.content,
+        },
+        answer: {
+          id: answer.id,
+          answer: answer.content,
+        },
+      },
+    };
   }
 
   // update an answer
-  static async updateAnswer(req: Request, res: Response) {
-    try {
-      const authorId = Number(req.userId);
-      const { content } = req.body;
-
-      // validate user input
-      const { error } = answerSchema.validate(req.body);
-
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          error: error.message,
-        });
-      }
-
-      const questionId = Number(req.params.id);
-
-      // validate question id
-      const { error: idError } = idSchema.validate(questionId);
-
-      if (idError) {
-        return res.status(400).json({
-          success: false,
-          error: idError.message,
-        });
-      }
-
-      const answerId = Number(req.params.id);
-
-      // check if the the user is the author
-      const answer = await prisma.answer.findUnique({
-        where: {
-          id: answerId,
-        },
-      });
-      if (!answer) {
-        return res.status(404).json({
-          success: false,
-          error: 'Answer not found',
-        });
-      }
-
-      if (answer.authorId !== authorId) {
-        return res.status(403).json({
-          success: false,
-          error: 'You are not authorized to update this answer',
-        });
-      }
-
-      // update the answer
-      await prisma.answer.update({
-        where: {
-          id: answerId,
-        },
-        data: {
-          content,
-        },
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: 'Successfully updated answer',
-        data: answer,
-      });
-    } catch (error: any) {
-      return res.status(500).json({
+  static async updateAnswer({
+    authorId,
+    questionId,
+    answerId,
+    content,
+  }: {
+    authorId: number;
+    questionId: number;
+    answerId: number;
+    content: string;
+  }) {
+    // validate user input
+    const { error } = answerSchema.validate({ content });
+    // validate question and answer id
+    const { error: questionIdError } = idSchema.validate(questionId);
+    const { error: answerIdError } = idSchema.validate(answerId);
+    if (error || questionIdError || answerIdError) {
+      return {
         success: false,
-        message: 'There was an error updating the answer',
-        data: error.message,
-      });
+        error: error?.message || questionIdError?.message || answerIdError?.message,
+      };
     }
+    // check if the question exists
+    const question = await findQuestion(questionId);
+    if (!question) {
+      return {
+        success: false,
+        error: 'Question not found',
+      };
+    }
+    // check if the answer exists
+    const answer = await findAnswer(answerId);
+    if (!answer) {
+      return {
+        success: false,
+        error: 'Answer not found',
+      };
+    }
+    // check if it's an answer to the question
+    if (answer.questionId !== questionId) {
+      return {
+        success: false,
+        error: 'Answer not found',
+      };
+    }
+    // check if the the user is the author of the answer
+    if (answer.authorId !== authorId) {
+      return {
+        success: false,
+        error: 'You are not authorized to update this answer',
+      };
+    }
+    // update the answer
+    const updatedAnswer = await updateAnAnswer(answerId, content);
+    return {
+      success: true,
+      message: 'Successfully updated the answer',
+      data: {
+        question: {
+          title: question.title,
+          content: question.content,
+        },
+        answer: {
+          id: updatedAnswer.id,
+          answer: updatedAnswer.content,
+          edited: updatedAnswer.updatedAt,
+        },
+      },
+    };
   }
 
-  // delete an answer if the user is the author
-  static async deleteAnswer(req: Request, res: Response) {
-    try {
-      const userId = Number(req.userId);
-      const questionId = Number(req.params.id);
-      const answerId = Number(req.params.answerId);
-      // validate question id
-      const { error } = idSchema.validate(questionId);
+  // delete an answer
+  static async deleteAnswer({ authorId, questionId, answerId }: { authorId: number; questionId: number; answerId: number }) {
+    const { error: questionIderror } = idSchema.validate(questionId);
+    const { error: answerIderror } = idSchema.validate(answerId);
 
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          error: error.message,
-        });
-      }
-      // validate answer id
-      const { error: answerError } = idSchema.validate(answerId);
-
-      if (answerError) {
-        return res.status(400).json({
-          success: false,
-          error: answerError.message,
-        });
-      }
-
-      const question = await prisma.question.findUnique({
-        where: {
-          id: questionId,
-        },
-      });
-      if (!question) {
-        return res.status(404).json({
-          success: false,
-          error: 'Question not found',
-        });
-      }
-      const answer = await prisma.answer.findUnique({
-        where: {
-          id: answerId,
-        },
-      });
-      if (!answer) {
-        return res.status(404).json({
-          success: false,
-          error: 'Answer not found',
-        });
-      }
-      // console.log(answer.authorId, userId);
-      if (answer.authorId !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'You are not authorized to delete this answer',
-        });
-      }
-      // check if the question has the answer
-      const questionAnswer = await prisma.question.findFirst({
-        where: {
-          id: questionId,
-          answer: {
-            some: {
-              id: answerId,
-            },
-          },
-        },
-      });
-      if (!questionAnswer) {
-        return res.status(404).json({
-          success: false,
-          error: 'Answer not found',
-        });
-      }
-      // delete the answer
-      await prisma.answer.delete({
-        where: {
-          id: answerId,
-        },
-      });
-      return res.status(200).json({
-        success: true,
-        message: 'Successfully deleted answer',
-      });
-    } catch (error: any) {
-      return res.status(500).json({
+    if (questionIderror || answerIderror) {
+      return {
         success: false,
-        message: 'There was an error deleting the answer',
-      });
+        error: questionIderror?.message || answerIderror?.message,
+      };
     }
+    // check if the question exists
+    const question = await findQuestion(questionId);
+    if (!question) {
+      return {
+        success: false,
+        error: 'Question not found',
+      };
+    }
+    // check if the answer exists or it belongs to the question
+    const answer = await findAnswer(answerId);
+
+    if (!answer || answer.questionId !== questionId) {
+      return {
+        success: false,
+        error: 'Answer not found',
+      };
+    }
+    // check if the user is the author of the answer
+    if (answer.authorId !== authorId) {
+      return {
+        success: false,
+        error: 'You are not authorized to delete this answer',
+      };
+    }
+    // delete the answer
+    await deleteAnanswer(answerId);
+    return {
+      success: true,
+      message: 'Successfully deleted answer',
+    };
   }
 }
-
 export default AnswerController;

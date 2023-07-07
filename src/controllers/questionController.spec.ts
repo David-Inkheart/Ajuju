@@ -246,6 +246,7 @@ describe('QuestionController', () => {
         message: 'Successfully updated the question',
         data: {
           question,
+          edited: question.updatedAt,
         },
       });
     });

@@ -3,7 +3,6 @@ import express from 'express';
 
 import AppController from '../controllers/Appcontroller';
 import UserController from '../controllers/Usercontroller';
-import AnswerController from '../controllers/Answercontroller';
 import VoteController from '../controllers/Votecontoller';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
@@ -14,6 +13,7 @@ import {
   deleteQuestionHandler,
   updateQuestionHandler,
 } from './routeHandlers/question';
+import { createAnswerHandler, deleteAnswerHandler, listQuestionAnswersHandler, updateAnswerHandler } from './routeHandlers/answer';
 
 // instatiate router
 const router = express.Router();
@@ -42,7 +42,7 @@ router.put('/accounts/profile', UserController.updateProfile);
 router.get('/allQuestions', AllQuestionsHandler);
 router.get('/questions', AskedQuestionsHandler);
 // GET: list of all answers to a question
-router.get('/questions/:id/answers', AnswerController.listQuestionAnswers);
+router.get('/questions/:id/answers', listQuestionAnswersHandler);
 // POST: follow a user
 router.post('/accounts/follow/:id', UserController.followUser);
 // POST: unfollow a user
@@ -54,17 +54,19 @@ router.post('/accounts/followers', UserController.getFollowers);
 // POST: create a new question
 router.post('/questions', createQuestionHandler);
 // POST: create a new answer to a question
-router.post('/questions/:id/answers', AnswerController.createAnswer);
+router.post('/questions/:id/answers', createAnswerHandler);
 // POST: upvote or downvote a question
 router.post('/questions/:id/vote', VoteController.voteQuestion);
 // POST: upvote or downvote an answer
 router.post('/questions/:id/answers/:answerId/vote', VoteController.voteAnswer);
 // PUT: update a question
 router.put('/questions/:id', updateQuestionHandler);
+// PUT: update an answer
+router.put('/questions/:id/answers/:answerId', updateAnswerHandler);
 
 // DELETE: delete a question
 router.delete('/questions/:id', deleteQuestionHandler);
 // DELETE: delete an answer
-router.delete('/questions/:id/answers/:answerId', AnswerController.deleteAnswer);
+router.delete('/questions/:id/answers/:answerId', deleteAnswerHandler);
 
 export default router;
