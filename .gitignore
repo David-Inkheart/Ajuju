@@ -1,7 +1,6 @@
 node_modules
 .env
-prisma
 package-lock.json
 dist
 coverage
-jest.config.js
+.vscode
