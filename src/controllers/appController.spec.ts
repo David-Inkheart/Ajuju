@@ -1,29 +1,12 @@
-import { Request, Response } from 'express';
 import AppController from './Appcontroller';
 
-let mockRequest: jest.Mocked<Request>;
-let mockResponse: jest.Mocked<Response>;
+describe('get home', () => {
+  it('should return the home page', () => {
+    const response = AppController.getHome();
 
-beforeEach(() => {
-  mockRequest = {} as jest.Mocked<Request>;
-  mockResponse = {} as jest.Mocked<Response>;
-});
-
-afterEach(() => {
-  jest.clearAllMocks();
-});
-
-describe('get home page', () => {
-  it('should return a json object with a 200 status code', async () => {
-    mockResponse.status = jest.fn().mockReturnValue(mockResponse);
-    mockResponse.json = jest.fn().mockReturnValue(mockResponse);
-
-    await AppController.getHome(mockRequest, mockResponse);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalledWith({
+    expect(response).toEqual({
       success: true,
-      message: 'Ajuju: ask, know more, share!',
+      message: 'API is online, welcome!',
       data: {
         name: 'Ajuju',
         purpose: 'Ask, know more, share!',

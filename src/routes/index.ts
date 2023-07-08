@@ -1,7 +1,6 @@
 // main router for the app
 import express from 'express';
 
-import AppController from '../controllers/Appcontroller';
 import UserController from '../controllers/Usercontroller';
 import VoteController from '../controllers/Votecontoller';
 import authMiddleware from '../middleWares/authMiddleware';
@@ -14,12 +13,14 @@ import {
   updateQuestionHandler,
 } from './routeHandlers/question';
 import { createAnswerHandler, deleteAnswerHandler, listQuestionAnswersHandler, updateAnswerHandler } from './routeHandlers/answer';
+import { getHomeHandler } from './routeHandlers/home';
+import { followUserHandler, getFollowingHandler, searchAccountHandler, unfollowUserHandler } from './routeHandlers/user';
 
 // instatiate router
 const router = express.Router();
 
 // get home page
-router.get('/', AppController.getHome);
+router.get('/', getHomeHandler);
 // POST: User registration
 router.post('/auth/register', registerHandler);
 // POST: User login
@@ -35,7 +36,7 @@ router.use(authMiddleware);
 // POST: auth user change password
 router.post('/auth/change-password', changePasswordHandler);
 // GET: get profile of a user who owns the provided email
-router.get('/search/accounts', UserController.searchAccount);
+router.get('/search/accounts', searchAccountHandler);
 // PUT: update user profile bio
 router.put('/accounts/profile', UserController.updateProfile);
 // GET: list of all questions
@@ -44,11 +45,11 @@ router.get('/questions', AskedQuestionsHandler);
 // GET: list of all answers to a question
 router.get('/questions/:id/answers', listQuestionAnswersHandler);
 // POST: follow a user
-router.post('/accounts/follow/:id', UserController.followUser);
+router.post('/accounts/follow/:id', followUserHandler);
 // POST: unfollow a user
-router.post('/accounts/unfollow/:id', UserController.unfollowUser);
+router.post('/accounts/unfollow/:id', unfollowUserHandler);
 // POST: get all users a user is following
-router.post('/accounts/following', UserController.getFollowing);
+router.post('/accounts/following', getFollowingHandler);
 // POST: get all users following a user
 router.post('/accounts/followers', UserController.getFollowers);
 // POST: create a new question
