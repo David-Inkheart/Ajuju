@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "test": "jest",
+    "postinstall": "npx tsc",
     "dev": "nodemon --exec ts-node src/server.ts"
   },
   "keywords": [],
