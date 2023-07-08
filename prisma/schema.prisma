@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  username     String         @unique
+  email        String         @unique
+  password     String
+  createdAt    DateTime       @default(now())
+  answer       Answer[]
+  answerVote   AnswerVote[]
+  question     Question[]
+  questionVote QuestionVote[]
+  follower     Follows[]      @relation("follower")
+  following    Follows[]      @relation("following")
+  profile      Profile?
+}
+
+model Follows {
+  followerId  Int
+  followingId Int
+  follower    User @relation("follower", fields: [followerId], references: [id])
+  following   User @relation("following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+}
+
+model Profile {
+  id     Int     @id @default(autoincrement())
+  bio    String?
+  userId Int     @unique
+  user   User    @relation(fields: [userId], references: [id])
+}
+
+model Question {
+  id           Int            @id @default(autoincrement())
+  title        String         @db.VarChar(255)
+  content      String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  authorId     Int
+  answer       Answer[]
+  questionVote QuestionVote[]
+  voteCount    Int            @default(0)
+  author       User           @relation(fields: [authorId], references: [id])
+}
+
+model QuestionVote {
+  id         Int      @id @default(autoincrement())
+  voteType   VoteType
+  createdAt  DateTime @default(now())
+  userId     Int
+  questionId Int
+  user       User     @relation(fields: [userId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Answer {
+  id         Int          @id @default(autoincrement())
+  content    String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  authorId   Int
+  questionId Int
+  answerVote AnswerVote[]
+  voteCount  Int          @default(0)
+  author     User         @relation(fields: [authorId], references: [id])
+  question   Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model AnswerVote {
+  id        Int      @id @default(autoincrement())
+  voteType  VoteType
+  createdAt DateTime @default(now())
+  userId    Int
+  answerId  Int
+  user      User     @relation(fields: [userId], references: [id])
+  answer    Answer   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+}
+
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
