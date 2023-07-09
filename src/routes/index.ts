@@ -1,7 +1,6 @@
 // main router for the app
 import express from 'express';
 
-import VoteController from '../controllers/Votecontroller';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 import {
@@ -21,7 +20,7 @@ import {
   unfollowUserHandler,
   updateProfileHandler,
 } from './routeHandlers/user';
-import { voteQuestionHandler } from './routeHandlers/vote';
+import { voteAnswerHandler, voteQuestionHandler } from './routeHandlers/vote';
 
 // instatiate router
 const router = express.Router();
@@ -66,7 +65,7 @@ router.post('/questions/:id/answers', createAnswerHandler);
 // POST: upvote or downvote a question
 router.post('/questions/:id/vote', voteQuestionHandler);
 // POST: upvote or downvote an answer
-router.post('/questions/:id/answers/:answerId/vote', VoteController.voteAnswer);
+router.post('/questions/:id/answers/:answerId/vote', voteAnswerHandler);
 // PUT: update a question
 router.put('/questions/:id', updateQuestionHandler);
 // PUT: update an answer
