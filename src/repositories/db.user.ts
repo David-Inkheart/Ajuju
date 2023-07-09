@@ -18,6 +18,30 @@ export const findProfile = (data: Prisma.ProfileWhereUniqueInput) => {
   return prisma.profile.findUnique({ where: data });
 };
 
+export const createProfile = ({ userId, bio }: { userId: number; bio: string }) => {
+  return prisma.profile.create({
+    data: {
+      bio,
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+    },
+  });
+};
+
+export const updateTheProfile = ({ userId, bio }: { userId: number; bio: string }) => {
+  return prisma.profile.update({
+    where: {
+      userId,
+    },
+    data: {
+      bio,
+    },
+  });
+};
+
 export const checkUserFollower = (id: number) => {
   return prisma.user.findUnique({
     where: {

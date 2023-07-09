@@ -130,3 +130,62 @@ export const getFollowingHandler: RequestHandler = async (req, res) => {
     });
   }
 };
+
+export const getFollowersHandler: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId as UserId;
+
+    const response = await UserController.getFollowers({ userId });
+
+    if (!response.success) {
+      if (response.error?.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          error: response.error,
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        error: response.error,
+      });
+    }
+
+    return res.json({
+      success: response.success,
+      message: response.message,
+      data: response.data,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+};
+
+export const updateProfileHandler: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.userId as UserId;
+    const { bio } = req.body;
+
+    const response = await UserController.updateProfile({ userId, bio });
+
+    if (!response.success) {
+      return res.status(400).json({
+        success: false,
+        error: response.error,
+      });
+    }
+
+    return res.json({
+      success: response.success,
+      message: response.message,
+      data: response.data,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+};

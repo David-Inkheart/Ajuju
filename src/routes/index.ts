@@ -1,8 +1,7 @@
 // main router for the app
 import express from 'express';
 
-import UserController from '../controllers/Usercontroller';
-import VoteController from '../controllers/Votecontoller';
+import VoteController from '../controllers/Votecontroller';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 import {
@@ -14,7 +13,15 @@ import {
 } from './routeHandlers/question';
 import { createAnswerHandler, deleteAnswerHandler, listQuestionAnswersHandler, updateAnswerHandler } from './routeHandlers/answer';
 import { getHomeHandler } from './routeHandlers/home';
-import { followUserHandler, getFollowingHandler, searchAccountHandler, unfollowUserHandler } from './routeHandlers/user';
+import {
+  followUserHandler,
+  getFollowersHandler,
+  getFollowingHandler,
+  searchAccountHandler,
+  unfollowUserHandler,
+  updateProfileHandler,
+} from './routeHandlers/user';
+import { voteQuestionHandler } from './routeHandlers/vote';
 
 // instatiate router
 const router = express.Router();
@@ -38,7 +45,7 @@ router.post('/auth/change-password', changePasswordHandler);
 // GET: get profile of a user who owns the provided email
 router.get('/search/accounts', searchAccountHandler);
 // PUT: update user profile bio
-router.put('/accounts/profile', UserController.updateProfile);
+router.put('/accounts/profile', updateProfileHandler);
 // GET: list of all questions
 router.get('/allQuestions', AllQuestionsHandler);
 router.get('/questions', AskedQuestionsHandler);
@@ -50,14 +57,14 @@ router.post('/accounts/follow/:id', followUserHandler);
 router.post('/accounts/unfollow/:id', unfollowUserHandler);
 // POST: get all users a user is following
 router.post('/accounts/following', getFollowingHandler);
-// POST: get all users following a user
-router.post('/accounts/followers', UserController.getFollowers);
+// POST: get all user's followers
+router.post('/accounts/followers', getFollowersHandler);
 // POST: create a new question
 router.post('/questions', createQuestionHandler);
 // POST: create a new answer to a question
 router.post('/questions/:id/answers', createAnswerHandler);
 // POST: upvote or downvote a question
-router.post('/questions/:id/vote', VoteController.voteQuestion);
+router.post('/questions/:id/vote', voteQuestionHandler);
 // POST: upvote or downvote an answer
 router.post('/questions/:id/answers/:answerId/vote', VoteController.voteAnswer);
 // PUT: update a question

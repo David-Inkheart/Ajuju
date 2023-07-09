@@ -5,6 +5,8 @@ import UserController from './Usercontroller';
 import {
   checkUserFollower,
   findProfile,
+  createProfile,
+  updateTheProfile,
   findUser,
   followTheUser,
   unfollowTheUser,
@@ -294,6 +296,137 @@ describe('User controller', () => {
         data: {
           followedUsers: [],
         },
+      });
+    });
+  });
+
+  describe('getFollowers', () => {
+    it('should return the user followers', async () => {
+      const userId = faker.number.int({ max: 999999999 });
+      const user = {
+        id: userId,
+        username: faker.internet.userName(),
+        email: faker.internet.email(),
+        createdAt: faker.date.past(),
+        password: faker.internet.password(),
+        following: [],
+        follower: [
+          {
+            id: faker.number.int({ max: 999999999 }),
+            followerId: faker.number.int({ max: 999999999 }),
+            followingId: userId,
+          },
+        ],
+      };
+      mocked(checkUserFollower).mockResolvedValueOnce(user);
+      mocked(allUsersFollowed).mockResolvedValueOnce([
+        {
+          id: faker.number.int({ max: 999999999 }),
+          username: faker.internet.userName(),
+        },
+      ]);
+      const response = await UserController.getFollowers({ userId });
+      expect(response).toEqual({
+        success: true,
+        message: expect.any(String),
+        data: {
+          followers: [
+            {
+              id: expect.any(Number),
+              username: expect.any(String),
+            },
+          ],
+        },
+      });
+    });
+
+    it('should return an empty array if the user has no followers', async () => {
+      const userId = faker.number.int({ max: 999999999 });
+      const user = {
+        id: userId,
+        username: faker.internet.userName(),
+        email: faker.internet.email(),
+        createdAt: faker.date.past(),
+        password: faker.internet.password(),
+        following: [],
+        follower: [],
+      };
+      mocked(checkUserFollower).mockResolvedValueOnce(user);
+      const response = await UserController.getFollowers({ userId });
+      expect(response).toEqual({
+        success: true,
+        message: expect.any(String),
+        data: {
+          followers: [],
+        },
+      });
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should return an error if the bio is invalid', async () => {
+      const userId = faker.number.int({ max: 999999999 });
+      const bio = '';
+      const response = await UserController.updateProfile({ userId, bio });
+      expect(response).toEqual({
+        success: false,
+        error: expect.any(String),
+      });
+    });
+
+    it('should create a new profile if the user has no profile', async () => {
+      const userId = faker.number.int({ max: 999999999 });
+      const bio = faker.lorem.sentence();
+      const username = faker.internet.userName();
+      const user = {
+        id: userId,
+        username,
+        email: faker.internet.email(),
+        createdAt: faker.date.past(),
+        password: faker.internet.password(),
+      };
+      mocked(findUser).mockResolvedValueOnce(user);
+      mocked(findProfile).mockResolvedValueOnce(null);
+      mocked(createProfile).mockResolvedValueOnce({
+        id: faker.number.int({ max: 999999999 }),
+        bio,
+        userId,
+      });
+      const response = await UserController.updateProfile({ userId, bio });
+      expect(response).toMatchObject({
+        success: true,
+        message: expect.any(String),
+        data: expect.any(Object),
+      });
+    });
+
+    it('should update the profile if the user has a profile', async () => {
+      const userId = faker.number.int({ max: 999999999 });
+      const bio = faker.lorem.sentence();
+      const username = faker.internet.userName();
+      const user = {
+        id: userId,
+        username,
+        email: faker.internet.email(),
+        createdAt: faker.date.past(),
+        password: faker.internet.password(),
+      };
+      mocked(findUser).mockResolvedValueOnce(user);
+      mocked(findProfile).mockResolvedValueOnce({
+        id: faker.number.int({ max: 999999999 }),
+        bio,
+        userId,
+      });
+      mocked(updateTheProfile).mockResolvedValueOnce({
+        id: faker.number.int({ max: 999999999 }),
+        bio,
+        userId,
+      });
+      const response = await UserController.updateProfile({ userId, bio });
+      expect(response).toMatchObject({
+        success: true,
+        message: expect.any(String),
+        data: expect.any(Object),
       });
     });
   });
