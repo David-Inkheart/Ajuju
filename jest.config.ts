@@ -15,6 +15,8 @@ const config: Config.InitialOptions = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   moduleDirectories: ['node_modules', 'src'],
+  clearMocks: true,
+  resetMocks: true,
 };
 
 export default config;

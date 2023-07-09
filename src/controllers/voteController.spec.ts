@@ -29,7 +29,7 @@ describe('Vote Controller', () => {
     it('should fail if validation fails', async () => {
       const id = faker.number.float();
       const userId = faker.number.int({ max: 999999999 });
-      const voteType = ['UPVOTE', 'DOWNVOTE'] as unknown as VoteType;
+      const voteType = 'UPVOTE' as VoteType;
       await expect(
         VoteController.voteQuestion({
           id,
