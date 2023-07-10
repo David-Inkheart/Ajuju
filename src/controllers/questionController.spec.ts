@@ -42,7 +42,9 @@ describe('QuestionController', () => {
           title: question.title,
           content: question.content,
           authorId: question.authorId,
-          votes: question.voteCount,
+          netVotes: question.voteCount,
+          upVotes: expect.any(Number),
+          downVotes: expect.any(Number),
         })),
       });
     });
@@ -92,7 +94,9 @@ describe('QuestionController', () => {
           id: question.id,
           title: question.title,
           content: question.content,
-          votes: question.voteCount,
+          netVotes: question.voteCount,
+          upVotes: expect.any(Number),
+          downVotes: expect.any(Number),
         })),
       });
     });

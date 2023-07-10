@@ -5,25 +5,38 @@ class QuestionController {
   static async listQuestions() {
     const questions = await listAllQuestions();
 
+    const upVotes = questions.map((question) => question.questionVote.filter((vote) => vote.voteType === 'UPVOTE').length);
+
+    const downVotes = questions.map((question) => question.questionVote.filter((vote) => vote.voteType === 'DOWNVOTE').length);
+
     return {
       questions: questions.map((question) => ({
         id: question.id,
         title: question.title,
         content: question.content,
         authorId: question.authorId,
-        votes: question.voteCount,
+        netVotes: question.voteCount,
+        upVotes: upVotes[questions.indexOf(question)],
+        downVotes: downVotes[questions.indexOf(question)],
       })),
     };
   }
 
   static async listUserQuestions(authorId: number) {
     const questions = await listAskedQuestions(authorId);
+
+    const upVotes = questions.map((question) => question.questionVote.filter((vote) => vote.voteType === 'UPVOTE').length);
+
+    const downVotes = questions.map((question) => question.questionVote.filter((vote) => vote.voteType === 'DOWNVOTE').length);
+
     return {
       questions: questions.map((question) => ({
         id: question.id,
         title: question.title,
         content: question.content,
-        votes: question.voteCount,
+        netVotes: question.voteCount,
+        upVotes: upVotes[questions.indexOf(question)],
+        downVotes: downVotes[questions.indexOf(question)],
       })),
     };
   }

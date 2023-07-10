@@ -1,6 +1,14 @@
 import { answerSchema, idSchema } from '../utils/validators';
 import { findQuestion } from '../repositories/db.question';
-import { answerQuestion, deleteAnanswer, findAnswer, listAnswers, listAnswerstoQuestion, updateAnAnswer } from '../repositories/db.answer';
+import {
+  answerVotes,
+  answerQuestion,
+  deleteAnanswer,
+  findAnswer,
+  listAnswers,
+  listAnswerstoQuestion,
+  updateAnAnswer,
+} from '../repositories/db.answer';
 
 class AnswerController {
   // list of all answers to a question
@@ -24,6 +32,16 @@ class AnswerController {
 
     const answers = await listAnswerstoQuestion(questionId);
 
+    // get answerVotes for each answer
+    const AnswerVotes = await Promise.all(answers.map((answer) => answerVotes(answer.id)));
+
+    // collate the voteTypes in a single array
+    const voteTypes = AnswerVotes.map((answerVote) => answerVote.map((vote) => vote.voteType));
+
+    const upVotes = voteTypes.map((voteType) => voteType.filter((vote) => vote === 'UPVOTE').length);
+
+    const downVotes = voteTypes.map((voteType) => voteType.filter((vote) => vote === 'DOWNVOTE').length);
+
     return {
       success: true,
       message: 'Successfully retrieved answers',
@@ -37,7 +55,9 @@ class AnswerController {
         answers: answers.map((answer) => ({
           id: answer.id,
           content: answer.content,
-          voteCount: answer.voteCount,
+          netVote: answer.voteCount,
+          upVotes: upVotes[answers.indexOf(answer)],
+          downVotes: downVotes[answers.indexOf(answer)],
         })),
       },
     };

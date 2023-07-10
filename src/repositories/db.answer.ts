@@ -82,3 +82,11 @@ export const deleteAnanswer = (id: number) => {
     },
   });
 };
+// get answerVotes for a single answer
+export const answerVotes = (answerId: number) => {
+  return prisma.answerVote.findMany({
+    where: {
+      answerId,
+    },
+  });
+};
