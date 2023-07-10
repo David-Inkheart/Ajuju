@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import bcrypt from 'bcrypt';
 
 export const hashPassword = async (password: string): Promise<string> => {
