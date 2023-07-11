@@ -34,7 +34,7 @@ class UserController {
       success: true,
       message: 'Successfully retrieved user profile',
       // select some user data and profile bio alone
-      data: { username: user.username, email: user.email, bio: profile?.bio, createdAt: user.createdAt },
+      data: { id: user.id, username: user.username, email: user.email, bio: profile?.bio, createdAt: user.createdAt },
     };
   }
 
@@ -70,14 +70,14 @@ class UserController {
     if (isFollowing) {
       return {
         success: false,
-        error: 'You are already following this user',
+        error: `You are already following ${user.username}`,
       };
     }
     // follow the user
     await followTheUser(userId, Number(id));
     return {
       success: true,
-      message: 'You are now following this user',
+      message: `You are now following ${user.username}`,
     };
   }
 
@@ -118,7 +118,7 @@ class UserController {
     await unfollowTheUser(userId, Number(id));
     return {
       success: true,
-      message: 'You have unfollowed this user',
+      message: `You have unfollowed ${user.username}`,
     };
   }
 

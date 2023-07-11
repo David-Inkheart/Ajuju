@@ -58,6 +58,7 @@ describe('User controller', () => {
         success: true,
         message: expect.any(String),
         data: {
+          id: user.id,
           username: user.username,
           email: user.email,
           bio: profile.bio,
