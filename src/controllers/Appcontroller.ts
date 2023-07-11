@@ -8,7 +8,7 @@ class AppController {
         purpose: 'Ask, know more, share!',
         API: 'REST',
         version: '1.0.0',
-        API_docs: 'https://documenter.getpostman.com/view/randomnumber/randomnumber/ajuju-rest-api/',
+        API_docs: 'https://documenter.getpostman.com/view/27102918/2s946bDajr',
       },
     };
   }
