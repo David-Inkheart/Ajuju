@@ -13,9 +13,9 @@ const transporter = nodemailer.createTransport({
 
 const selectTemplateFromPurpose = ({ purpose, username }: { purpose: string; username: string }) => {
   if (purpose === 'welcome') {
-    return pug.renderFile(`${process.cwd()}/welcome.pug`, { username });
+    return pug.renderFile(`${process.cwd()}/templates/welcome.pug`, { username });
   }
-  return pug.renderFile(`${process.cwd()}/resetPassword.pug`, { username });
+  return pug.renderFile(`${process.cwd()}/templates/resetPassword.pug`, { username });
 };
 
 const sendEmail = async ({ recipientEmail, purpose, username }: { recipientEmail: string; purpose: string; username: string }) => {
