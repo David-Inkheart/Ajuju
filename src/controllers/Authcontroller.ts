@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { hashPassword, comparePasswords } from '../utils/passwordService';
 import { registerSchema, loginSchema } from '../utils/validators';
 import { createUser, findUser } from '../repositories/db.user';
+import { sendToQueue } from '../utils/rabbitMQ/producer';
 
 class AuthController {
   static async register({ username, email, password }: { username: string; email: string; password: string }) {
@@ -40,6 +41,7 @@ class AuthController {
       expiresIn: '1h',
     });
 
+    sendToQueue({ recipientEmail: email, purpose: 'welcome', username });
     return {
       success: true,
       message: 'User registered successfully',
