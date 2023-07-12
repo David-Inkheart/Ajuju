@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "node dist/utils/rabbitMQ/consumer.js",
     "test": "jest",
     "build": "npm run prisma:generate && npm run prisma:migrate:deploy && npx tsc",
     "prisma:generate": "npx prisma generate",
