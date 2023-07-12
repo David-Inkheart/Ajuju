@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/utils/rabbitMQ/consumer.js",
     "test": "jest",
-    "build": "npm run prisma:generate && npm run prisma:migrate:deploy && npx tsc",
+    "build": "npx tsc",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate:deploy": "npx prisma migrate deploy",
     "postinstall": "npm run build",
