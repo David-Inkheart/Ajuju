@@ -11,19 +11,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const selectTemplateFromPurpose = ({ purpose, username }: { purpose: string; username: string }) => {
+const selectTemplateFromPurpose = ({ purpose, username, otp }: { purpose: string; username: string; otp: string }) => {
   if (purpose === 'welcome') {
     return pug.renderFile(`${process.cwd()}/templates/welcome.pug`, { username });
   }
-  return pug.renderFile(`${process.cwd()}/templates/resetPassword.pug`, { username });
+  return pug.renderFile(`${process.cwd()}/templates/resetPassword.pug`, { otp });
 };
 
-const sendEmail = async ({ recipientEmail, purpose, username }: { recipientEmail: string; purpose: string; username: string }) => {
+const sendEmail = async ({ recipientEmail, purpose, username, otp }: { recipientEmail: string; purpose: string; username: string; otp: string }) => {
   return transporter.sendMail({
     from: `"Ajuju" <${process.env.EMAIL}>`, // sender address
     to: recipientEmail, // list of receivers
-    subject: purpose === 'welcome' ? 'Welcome to Ajuju' : 'Password Reset Confirmation', // Subject line
-    html: selectTemplateFromPurpose({ username, purpose }), // html body
+    subject: purpose === 'welcome' ? `Welcome to Ajuju ${username}` : 'Password Reset Confirmation', // Subject line
+    html: selectTemplateFromPurpose({ username, purpose, otp }), // html body
   });
 };
 
