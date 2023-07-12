@@ -41,7 +41,7 @@ class AuthController {
       expiresIn: '1h',
     });
 
-    sendToQueue({ recipientEmail: email, purpose: 'welcome', username });
+    sendToQueue({ recipientEmail: email, purpose: 'welcome', username, otp: undefined });
     return {
       success: true,
       message: 'User registered successfully',
