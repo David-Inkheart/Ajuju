@@ -16,10 +16,20 @@ const connect = async () => {
   }
 };
 
-const sendToQueue = async ({ recipientEmail, purpose, username }: { recipientEmail: string; purpose: string; username: string }) => {
+const sendToQueue = async ({
+  recipientEmail,
+  purpose,
+  username = undefined,
+  otp = undefined,
+}: {
+  otp: number | undefined;
+  recipientEmail: string;
+  purpose: string;
+  username: string | undefined;
+}) => {
   await connect();
   channel.assertQueue(queue, { durable: true });
-  await channel.sendToQueue(queue, Buffer.from(JSON.stringify({ recipientEmail, purpose, username })), { persistent: true });
+  await channel.sendToQueue(queue, Buffer.from(JSON.stringify({ recipientEmail, purpose, username, otp })), { persistent: true });
 };
 
 export { sendToQueue };

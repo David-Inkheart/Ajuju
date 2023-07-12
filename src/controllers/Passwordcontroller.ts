@@ -4,6 +4,7 @@ import { hashPassword, comparePasswords } from '../utils/passwordService';
 import { UserId } from '../types/custom';
 import mockPasswordResetEmail from '../utils/emailService';
 import { changePasswordSchema, forgotPasswordSchema, resetPasswordSchema } from '../utils/validators';
+import { sendToQueue } from '../utils/rabbitMQ/producer';
 
 class PasswordController {
   static async changePassword({ userId, currentPassword, newPassword }: { userId: UserId; currentPassword: string; newPassword: string }) {
@@ -76,13 +77,9 @@ class PasswordController {
           error: 'Could not cache the password reset token',
         };
       }
-      // send the code to the user's email
-      const recipient = email;
-      const subject = 'Password Reset';
-      const message = `Your password reset code is: ${passwordResetToken}`;
 
       try {
-        await mockPasswordResetEmail(recipient, subject, message);
+        sendToQueue({ recipientEmail: email, otp: passwordResetToken, purpose: 'password_reset', username: undefined });
       } catch (err) {
         return {
           success: false,
