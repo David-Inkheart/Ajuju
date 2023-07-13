@@ -3,7 +3,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Ajuju is a Backend service that powers a fast and intuitive Q&A platform that connects users willing to answer questions in their interest niche or expertise. It delivers 
+Ajuju is a backend service that powers a fast and intuitive Q&A platform that connects users willing to answer questions in their interest niche or expertise. It delivers 
 conversational answers at your fingertips. No more waiting or sifting through irrelevant information!
 
 ![Alt text](Ajuju.png)
